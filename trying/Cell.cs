@@ -1,4 +1,11 @@
-﻿public class Cell
+﻿public enum CellType
+{
+    Water,
+    Shoted,
+    ShotedInShip,
+    Ship,
+}
+public class Cell
 {
     public int X { get; }
     public int Y{ get; }

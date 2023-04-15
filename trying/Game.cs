@@ -9,6 +9,14 @@ public enum GameState
     EnemyTurn,
     UpdatingField,
 }
+public enum Direction
+{
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 public class Game
 {
     Random rand = new Random();
@@ -16,19 +24,15 @@ public class Game
     public GameState state { get; private set; }
 
     private bool isPlaying;
-    private bool somethingChanged = false;
-    private bool enemiesFieldChanged = false;
 
     private int width = 10;
     private int height = 10;
     private Cell[,] ownCells;
     private Cell[,] enemyCells;
-    private List<Ship> ships = new List<Ship>();
-
-    char currentKey;
 
     public Server_Client server_client = new Server_Client();
 
+    int count = 0;
 
     #region DLL
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -60,7 +64,7 @@ public class Game
         GenerateEnemyField();
 
         UpdateAllScreen();
-        //EnterCoords();
+
         state = server_client.isServer ? GameState.YourTurn : GameState.EnemyTurn;
         isPlaying = true;
         GameLoop();
@@ -75,7 +79,6 @@ public class Game
             {
                 case GameState.YourTurn:
                     (int x, int y) = EnterCoords();
-                    //CoordsProcessing(x,y);
 
                     server_client.SendMessage($"Shot:{x},{y}");
                     state = GameState.EnemyTurn;
@@ -167,6 +170,11 @@ public class Game
                     {
 
                         enemyCells[y,x].type = CellType.ShotedInShip;
+                        count++;
+                        if(count >= 7)
+                        {
+                            isPlaying = false;
+                        }
                     }
                    enemyCells.UpdateFieldOnScreen(height,width, false);
 
@@ -197,13 +205,11 @@ public class Game
                 {
                     prefix += "Re";
                     continue;
-                    //EnterCoords();
                 }
                 if (int.Parse(splitedCoords[0]) < 0 || int.Parse(splitedCoords[0]) > 9 || splitedCoords[1][0] - 'A' < 0 || splitedCoords[1][0] - 'A' > 9)
                 {
                     prefix += "Re";
                     continue;
-                    //EnterCoords();
                 }
             }
             catch
