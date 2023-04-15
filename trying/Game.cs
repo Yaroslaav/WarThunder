@@ -1,194 +1,227 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
-
+public enum GameState
+{
+    PlacingShips,
+    YourTurn,
+    EnemyTurn,
+    UpdatingField,
+}
 public class Game
 {
+    Random rand = new Random();
+
+    public GameState state { get; private set; }
+
     private bool isPlaying;
     private bool somethingChanged = false;
     private bool enemiesFieldChanged = false;
 
-    private int width = 12;
-    private int height = 12;
+    private int width = 10;
+    private int height = 10;
     private Cell[,] ownCells;
     private Cell[,] enemyCells;
     private List<Ship> ships = new List<Ship>();
-    private bool shipIsPlacing = false;
 
-    private Server_Client server_client = new Server_Client();
+    char currentKey;
 
+    public Server_Client server_client = new Server_Client();
+
+
+    #region DLL
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool GetConsoleMode(IntPtr handle, out int mode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetStdHandle(int handle);
+
+    private static IntPtr Screen;
+
+    private void SetupDLL()
+    {
+        var handle = GetStdHandle(-11);
+        int mode;
+        GetConsoleMode(handle, out mode);
+        SetConsoleMode(handle, mode | 0x4);
+    }
+    #endregion
     public void Start()
     {
+        SetupDLL();
+        SetClientOrServer();
+        server_client.OnRead += CheckMessageFromAnotherPlayer;
+
+        Console.Clear();
+        GenerateOwnField();
+        GenerateEnemyField();
+
+        UpdateAllScreen();
+        //EnterCoords();
+        state = server_client.isServer ? GameState.YourTurn : GameState.EnemyTurn;
         isPlaying = true;
-        GenerateField();
-        ownCells.UpdateFieldOnScreen(height, width, true); 
+        GameLoop();
+
     }
     public void GameLoop()
     {
         while(isPlaying)
         {
-            if(somethingChanged)
+            server_client.ReadMessage();
+            switch (state)
             {
-                UpdateOwnField();
-            }
-            if (enemiesFieldChanged)
-            {
-                UpdateEnemyField();
+                case GameState.YourTurn:
+                    (int x, int y) = EnterCoords();
+                    //CoordsProcessing(x,y);
+
+                    server_client.SendMessage($"Shot:{x},{y}");
+                    state = GameState.EnemyTurn;
+                    break;
             }
         }
     }
-    public void UpdateOwnField()
+
+    public void SetClientOrServer()
     {
+        Console.WriteLine("Press `0` then `Enter` to become a server");
+        Console.WriteLine("Press `1` then `Enter` to become a client");
+        string _type = Console.ReadLine();
+        server_client = new Server_Client();
+
+        switch (_type)
+        {
+            case "0":
+                server_client.isServer = true;
+                server_client.StartServer();
+                break;
+            case "1":
+                server_client.isServer = false;
+                server_client.StartClient();
+                break;
+            default:
+                Console.WriteLine("you must just press `0` or `1` then `Enter`");
+                SetClientOrServer();
+                break;
+        }
 
     }
-    public void UpdateEnemyField()
-    {
 
+    public void CoordsProcessing(int x, int y)
+    {
+        switch (ownCells[y, x].type)
+        {
+            case CellType.Water:
+                ownCells[y, x].type = CellType.Shoted;
+                break;
+            case CellType.Ship:
+                ownCells[y, x].type = CellType.ShotedInShip;
+                break;
+        }
+    }
+    public void UpdateAllScreen()
+    {
+        GameState lastState = state;
+        state = GameState.UpdatingField;
+        Console.Clear();
+        ownCells.UpdateFieldOnScreen(height, width, true);
+        enemyCells.UpdateFieldOnScreen(height, width, false);
+        state = lastState;
     }
     public void Stop()
     {
         isPlaying = false;
+        server_client.OnRead -= CheckMessageFromAnotherPlayer;
     }
-    public void SetShips()
+
+    public void CheckMessageFromAnotherPlayer(string message)
     {
-        for(int i = 0; i < 10; i++)
+        string[] splited = message.Split(":");
+        string[] allInfo;
+        switch (splited[0])
         {
-            if(i < 4)
-            {
-                ships.Add( new Ship(1, Direction.Right));
-
-            }else if(i < 7) 
-            {
-                ships.Add(new Ship(2, Direction.Right));
-
-            }else if(i < 9)
-            {
-                ships.Add(new Ship(3, Direction.Right));
-            }
-            else
-            {
-                ships.Add(new Ship(4, Direction.Right));
-            }
-        }
-    }
-
-
-
-    public void SpawnShipsAboveTheTable()
-    {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 10; i++) 
-        {
-            switch (ships[i].ShipLength)
-            {
-                case 1:
-                    sb.AppendFormat("\u001b[37m{0}", "0");
-
-                    break;
-                case 2:
-                    sb.AppendFormat("\u001b[37m{0}", "0-");
-                    break;
-                case 3:
-                    sb.AppendFormat("\u001b[37m{0}", "0--");
-                    break;
-                case 4:
-                    sb.AppendFormat("\u001b[37m{0}", "0---");
-                    break;
-
-            }
-            sb.Append(" ");
-        }
-        Console.SetCursorPosition(0, 1);
-        Console.WriteLine(sb.ToString());
-            
-    }
-    public void SpawnShipOnTable()
-    {    
-        int spawnedShipsAmount = 0;
-        while(spawnedShipsAmount != 10)
-        {
-            if (!shipIsPlacing)
-            {
-                Ship currentShip = ships[spawnedShipsAmount];
-                Cell currentCell = ownCells[0,0];
-                int freeCellsAmount = 0;
-
-                for (int y = 0; y < height && freeCellsAmount < currentShip.ShipLength; y++)
+            case "Shot":
                 {
-                    for (int x = 0; x < width && freeCellsAmount < currentShip.ShipLength; x++)
-                    {
-                        if(freeCellsAmount > 0)
-                        {
-                            if (currentCell.NextNeighborIsFree(ownCells, x, y, height, width, currentShip.Direction))
-                            {
+                    allInfo = splited[1].Split(",");
+                    int x = int.Parse(allInfo[0]);
+                    int y = int.Parse(allInfo[1]);
+                    CoordsProcessing(x, y);
+                    server_client.SendMessage($"Coords:{x},{y},{ownCells[y,x].type}");
+                    ownCells.UpdateFieldOnScreen(height, width, true);
+                    state = GameState.YourTurn;
 
-                            } 
-
-                        }else if (ownCells[y,x].type == CellType.Water)
-                        {
-                            currentCell = ownCells[y, x];
-                            freeCellsAmount++;
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-
-    public void MoveShip(Direction direction)
-    {
-
-    }
-
-    public List<Cell> GetNeighbors(int x, int y, Direction direction)
-    {
-        List<Cell> cells = new List<Cell>();
-
-        switch (direction)
-        {
-            case Direction.Up:
-                if(y>0)
-                {
-                    if (ownCells[y-1, x].type == CellType.Water)
-                    {
-                        cells.Add(ownCells[y - 1, x]);
-                    }
                 }
                 break;
-            case Direction.Down:
-                if(y < height - 1)
+            case "Coords":
                 {
-                    if (ownCells[y + 1, x].type == CellType.Water)
+                    allInfo = splited[1].Split(",");
+                    int x = int.Parse(allInfo[0]);
+                    int y = int.Parse(allInfo[1]);
+                    string cellType = allInfo[2];
+                    if(cellType == CellType.Shoted.ToString())
                     {
-                        cells.Add(ownCells[y + 1, x]);
-                    }
-                }
-                break;
-            case Direction.Left: 
-                if(x > 0)
-                {
-                    if (ownCells[y,x-1].type == CellType.Water)
+                        enemyCells[y,x].type = CellType.Shoted;
+                    }else if(cellType == CellType.ShotedInShip.ToString())
                     {
-                        cells.Add(ownCells[y,x-1]);
+
+                        enemyCells[y,x].type = CellType.ShotedInShip;
                     }
-                }
-                break;
-            case Direction.Right:
-                if(x < width - 1)
-                {
-                    if (ownCells[y,x+1].type == CellType.Water)
-                    {
-                        cells.Add(ownCells[y,x+1]);
-                    }
+                   enemyCells.UpdateFieldOnScreen(height,width, false);
+
                 }
                 break;
         }
-        return cells;
+        //UpdateAllScreen();
+    }
+    string prefix = "";
+    public (int, int) EnterCoords()
+    {
+        UpdateAllScreen();
+        Console.SetCursorPosition(0, 27);
+        Console.Write(prefix + "Enter coords like `1,A`: ");
+        string coords = Console.ReadLine();
+        string[] splitedCoords = coords.Split(",");
+        char.ToUpper(splitedCoords[1][0]);
+        if (coords.Length > 1) 
+        {
+            if (splitedCoords.Length != 2)
+            {
+                EnterCoords();
+            }else if (int.Parse(splitedCoords[0]) < 0 || int.Parse(splitedCoords[0]) > 9 || splitedCoords[1][0] - 'A' < 0 || splitedCoords[1][0] - 'A' > 9)
+            {
+               // UpdateAllScreen();
+                EnterCoords();
+            }
+        }
+        return (int.Parse(splitedCoords[0]), splitedCoords[1][0] - 'A');
     }
 
+    public void SpawnShips(int shipsAmount)
+    {
+        List<int> xPositions = new List<int>();
+        List<int> yPositions = new List<int>();
+        for (int i = 0; i < shipsAmount; i++)
+        {
+            int xPosition = rand.Next(0, 10);
+            int yPosition = rand.Next(0, 10);
+            if(xPositions.Count > 0)
+            {
+                while (xPositions.Contains(xPosition) && yPositions.Contains(yPosition))
+                {
+                    xPosition = rand.Next(0, 10);
+                    yPosition = rand.Next(0, 10);
+                }
+            }
+            xPositions.Add(xPosition);
+            yPositions.Add(yPosition);
 
-    public void GenerateField()
+            ownCells[yPosition, xPosition].type = CellType.Ship;
+        }
+    }
+
+    public void GenerateOwnField()
     {
         ownCells = new Cell[height, width];
         for(int y = 0; y < height; y++)
@@ -196,20 +229,23 @@ public class Game
             for (int x = 0; x < width; x++)
             {
                 ownCells[y, x] = new Cell(x,y);
-                if(x == 0 || y == 0)
-                {
-                    ownCells[y,x].type = CellType.NumberedBorder;
-                }
-                else if(x == 1 || y == 1)
-                {
-                    ownCells[y,x].type = CellType.Border;
-                }
-                else
-                {
-                    ownCells[y,x].type = CellType.Water;
-                }
+                ownCells[y,x].type = CellType.Water;
+                
+            }
+        }
+        SpawnShips(7);
+    }
+    public void GenerateEnemyField()
+    {
+        enemyCells = new Cell[height, width];
+        for(int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                enemyCells[y, x] = new Cell(x,y);
+                enemyCells[y,x].type = CellType.Water;
+                
             }
         }
     }
-
 }

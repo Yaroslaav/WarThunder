@@ -1,4 +1,4 @@
-﻿public struct Cell
+﻿public class Cell
 {
     public int X { get; }
     public int Y{ get; }

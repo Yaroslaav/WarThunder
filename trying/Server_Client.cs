@@ -6,27 +6,32 @@ using System.IO;
 
 public class Server_Client
 {
-    static public bool reading = false;
+    public bool reading = false;
+    string _message = "";
+    public Action<string> OnRead;
+    public bool isServer = true;
 
-    public static void StartServer()
+    public TcpListener listener;
+    public TcpClient client;
+
+    public NetworkStream stream;
+    public void StartServer()
     {
         IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
         int port = 12345;
 
-        TcpListener listener = new TcpListener(ipAddress, port);
+        listener = new TcpListener(ipAddress, port);
 
         listener.Start();
-        Console.WriteLine("Сервер запущено на адресі {0}:{1}", ipAddress, port);
+        Console.WriteLine("The server is started at the address {0}:{1}", ipAddress, port);
 
-        TcpClient client = listener.AcceptTcpClient();
-        Console.WriteLine("Клієнт підключився: {0}", client.Client.RemoteEndPoint);
+        client = listener.AcceptTcpClient();
+        Console.WriteLine("The client has connected: {0}", client.Client.RemoteEndPoint);
 
-        NetworkStream stream = client.GetStream();
-
-        byte[] data = new byte[1024];
-        int bytesRead = stream.Read(data, 0, data.Length);
-        string message = Encoding.UTF8.GetString(data, 0, bytesRead);
-        Console.WriteLine("Клієнт надіслав повідомлення: {0}", message);
+        stream = client.GetStream();
+        /*
+        ServerRead();
+        //Console.WriteLine("Клієнт надіслав повідомлення: {0}", message);
 
         byte[] response = Encoding.UTF8.GetBytes("Повідомлення отримано на сервері!");
         stream.Write(response, 0, response.Length);
@@ -48,37 +53,36 @@ public class Server_Client
                 }
             }
             if(!reading)
-                ServerRead(stream);
+                ServerRead();
 
         }
-
+        */
+    }
+    public void StopServer()
+    {
         client.Close();
         listener.Stop();
     }
-    static public async void ServerRead(NetworkStream stream) => await Task.Run(() =>
-        {
-            reading = true;
-            byte[] _data = new byte[1024];
-            int _bytesRead = stream.Read(_data, 0, _data.Length);
-            string _message = Encoding.UTF8.GetString(_data, 0, _bytesRead);
-            Console.WriteLine("Клієнт надіслав повідомлення: {0}", _message);
-            reading = false;
-        });
+    public void SendMessageToClient(string message)
+    {
+            byte[] _response = Encoding.UTF8.GetBytes(message);
+            stream.Write(_response, 0, _response.Length);
 
+    }
 
-    public static void StartClient()
+    public void StartClient()
     {
         IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
         int port = 12345;
 
-        TcpClient client = new TcpClient();
+        client = new TcpClient();
 
         client.Connect(ipAddress, port);
         Console.WriteLine("Підключення до сервера: {0}", client.Client.RemoteEndPoint);
 
-        NetworkStream stream = client.GetStream();
+        stream = client.GetStream();
 
-        string message = "Привіт, сервер!";
+        /*string message = "Привіт, сервер!";
         byte[] data = Encoding.UTF8.GetBytes(message);
         stream.Write(data, 0, data.Length);
         Console.WriteLine("Повідомлення надіслано до сервера: {0}", message);
@@ -111,23 +115,61 @@ public class Server_Client
                     ClientRead(stream);
             }
         }
-
-
-
-        client.Close();
+        */
     }
-    static public async void ClientRead(NetworkStream stream)
-    {
+    public void StopClient() => client.Close();
 
+    public async void ClientRead()
+    {
+            await Task.Run(() =>
+            {
+                reading = true;
+                byte[] data = new byte[1024];
+                int bytes = stream.Read(data, 0, data.Length);
+                _message = Encoding.UTF8.GetString(data, 0, bytes );
+                OnRead?.Invoke(_message);
+                //Console.WriteLine("Відповідь сервера: {0}", message);
+                reading = false;
+            });
+    }
+    public async void ServerRead()
+    {
         await Task.Run(() =>
         {
             reading = true;
-            byte[] data = new byte[1024];
-            int bytes = stream.Read(data, 0, data.Length);
-            string message = Encoding.UTF8.GetString(data, 0, bytes);
-            Console.WriteLine("Відповідь сервера: {0}", message);
+            byte[] _data = new byte[1024];
+            int _bytesRead = stream.Read(_data, 0, _data.Length);
+            _message = Encoding.UTF8.GetString(_data, 0, _bytesRead);
+
+            OnRead?.Invoke(_message);
+            //Console.WriteLine("Клієнт надіслав повідомлення: {0}", _message);
             reading = false;
         });
     }
 
+    public void SendMessageToServer(string message)
+    {
+        byte[] data = Encoding.UTF8.GetBytes(message);
+        stream.Write(data, 0, data.Length);
+    }
+    public void SendMessage(string message)
+    {
+        if (isServer)
+            SendMessageToClient(message);
+        else
+            SendMessageToServer(message);
+    }
+    public void ReadMessage()
+    {
+        if (reading)
+            return;
+        if(isServer)
+        {
+            ClientRead();
+        }
+        else
+        {
+            ServerRead();
+        }
+    }
 }

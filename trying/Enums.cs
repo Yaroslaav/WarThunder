@@ -8,11 +8,8 @@ public enum Direction
 }
 public enum CellType
 {
-    Border,
-    NumberedBorder,
     Water,
     Shoted,
     ShotedInShip,
     Ship,
-    StartOfShip,
 }
