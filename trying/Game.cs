@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 public enum GameState
 {
     PlacingShips,
@@ -34,6 +32,7 @@ public class Game
 
     int count = 0;
 
+
     #region DLL
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
@@ -53,6 +52,7 @@ public class Game
         SetConsoleMode(handle, mode | 0x4);
     }
     #endregion
+
     public void Start()
     {
         SetupDLL();
@@ -86,6 +86,14 @@ public class Game
             }
         }
     }
+    public void Stop()
+    {
+        isPlaying = false;
+        server_client.OnRead -= CheckMessageFromAnotherPlayer;
+
+        server_client.Stop();
+    }
+
 
     public void SetClientOrServer()
     {
@@ -111,34 +119,6 @@ public class Game
         }
 
     }
-
-    public void CoordsProcessing(int x, int y)
-    {
-        switch (ownCells[y, x].type)
-        {
-            case CellType.Water:
-                ownCells[y, x].type = CellType.Shoted;
-                break;
-            case CellType.Ship:
-                ownCells[y, x].type = CellType.ShotedInShip;
-                break;
-        }
-    }
-    public void UpdateAllScreen()
-    {
-        GameState lastState = state;
-        state = GameState.UpdatingField;
-        Console.Clear();
-        ownCells.UpdateFieldOnScreen(height, width, true);
-        enemyCells.UpdateFieldOnScreen(height, width, false);
-        state = lastState;
-    }
-    public void Stop()
-    {
-        isPlaying = false;
-        server_client.OnRead -= CheckMessageFromAnotherPlayer;
-    }
-
     public void CheckMessageFromAnotherPlayer(string message)
     {
         string[] splited = message.Split(":");
@@ -182,9 +162,21 @@ public class Game
                 break;
         }
     }
-    string prefix = "";
+    public void CoordsProcessing(int x, int y)
+    {
+        switch (ownCells[y, x].type)
+        {
+            case CellType.Water:
+                ownCells[y, x].type = CellType.Shoted;
+                break;
+            case CellType.Ship:
+                ownCells[y, x].type = CellType.ShotedInShip;
+                break;
+        }
+    }
     public (int, int) EnterCoords()
     {
+        string prefix = "";
         string[] splitedCoords;
 
         while (true)
@@ -218,10 +210,20 @@ public class Game
             }
             break;
         }
-        prefix = "";
+        UpdateAllScreen();
         return (int.Parse(splitedCoords[0]), splitedCoords[1][0] - 'A');
     }
 
+
+    public void UpdateAllScreen()
+    {
+        GameState lastState = state;
+        state = GameState.UpdatingField;
+        Console.Clear();
+        ownCells.UpdateFieldOnScreen(height, width, true);
+        enemyCells.UpdateFieldOnScreen(height, width, false);
+        state = lastState;
+    }
     public void SpawnShips(int shipsAmount)
     {
         List<int> xPositions = new List<int>();
@@ -244,7 +246,6 @@ public class Game
             ownCells[yPosition, xPosition].type = CellType.Ship;
         }
     }
-
     public void GenerateOwnField()
     {
         ownCells = new Cell[height, width];
@@ -252,7 +253,7 @@ public class Game
         {
             for (int x = 0; x < width; x++)
             {
-                ownCells[y, x] = new Cell(x,y);
+                ownCells[y, x] = new Cell();
                 ownCells[y,x].type = CellType.Water;
                 
             }
@@ -266,7 +267,7 @@ public class Game
         {
             for (int x = 0; x < width; x++)
             {
-                enemyCells[y, x] = new Cell(x,y);
+                enemyCells[y, x] = new Cell();
                 enemyCells[y,x].type = CellType.Water;
                 
             }

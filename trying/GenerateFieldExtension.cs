@@ -1,5 +1,5 @@
 ﻿using System.Text;
-public static class GenerateFieldExtensions
+public static class GenerateFieldExtension
 {
     public static void UpdateFieldOnScreen(this Cell[,] cells, int height, int width, bool ownField)
     {

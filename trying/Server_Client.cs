@@ -7,8 +7,11 @@ using System.IO;
 public class Server_Client
 {
     public bool reading = false;
+
     string _message = "";
+
     public Action<string> OnRead;
+
     public bool isServer = true;
 
     public TcpListener listener;
@@ -35,11 +38,6 @@ public class Server_Client
         client.Close();
         listener.Stop();
     }
-    public void SendMessageToClient(string message)
-    {
-            byte[] _response = Encoding.UTF8.GetBytes(message);
-            stream.Write(_response, 0, _response.Length);
-    }
 
     public void StartClient()
     {
@@ -49,7 +47,6 @@ public class Server_Client
         client = new TcpClient();
 
         client.Connect(ipAddress, port);
-        Console.WriteLine("Підключення до сервера: {0}", client.Client.RemoteEndPoint);
 
         stream = client.GetStream();
 
@@ -65,7 +62,6 @@ public class Server_Client
                 int bytes = stream.Read(data, 0, data.Length);
                 _message = Encoding.UTF8.GetString(data, 0, bytes );
                 OnRead?.Invoke(_message);
-                //Console.WriteLine("Відповідь сервера: {0}", message);
                 reading = false;
             });
     }
@@ -79,22 +75,14 @@ public class Server_Client
             _message = Encoding.UTF8.GetString(_data, 0, _bytesRead);
 
             OnRead?.Invoke(_message);
-            //Console.WriteLine("Клієнт надіслав повідомлення: {0}", _message);
             reading = false;
         });
     }
 
-    public void SendMessageToServer(string message)
+    public void SendMessage(string message)
     {
         byte[] data = Encoding.UTF8.GetBytes(message);
         stream.Write(data, 0, data.Length);
-    }
-    public void SendMessage(string message)
-    {
-        if (isServer)
-            SendMessageToClient(message);
-        else
-            SendMessageToServer(message);
     }
     public void ReadMessage()
     {
@@ -107,6 +95,17 @@ public class Server_Client
         else
         {
             ServerRead();
+        }
+    }
+    public void Stop()
+    {
+        if (isServer)
+        {
+            StopServer();
+        }
+        else
+        {
+            StopClient();
         }
     }
 }
