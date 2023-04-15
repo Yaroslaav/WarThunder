@@ -173,28 +173,46 @@ public class Game
                 }
                 break;
         }
-        //UpdateAllScreen();
     }
     string prefix = "";
     public (int, int) EnterCoords()
     {
-        UpdateAllScreen();
-        Console.SetCursorPosition(0, 27);
-        Console.Write(prefix + "Enter coords like `1,A`: ");
-        string coords = Console.ReadLine();
-        string[] splitedCoords = coords.Split(",");
-        char.ToUpper(splitedCoords[1][0]);
-        if (coords.Length > 1) 
+        string[] splitedCoords;
+
+        while (true)
         {
-            if (splitedCoords.Length != 2)
+            UpdateAllScreen();
+            Console.SetCursorPosition(0, 27);
+            Console.Write(prefix + "Enter coords like `1,A`: ");
+            string coords = Console.ReadLine();
+            try
             {
-                EnterCoords();
-            }else if (int.Parse(splitedCoords[0]) < 0 || int.Parse(splitedCoords[0]) > 9 || splitedCoords[1][0] - 'A' < 0 || splitedCoords[1][0] - 'A' > 9)
-            {
-               // UpdateAllScreen();
-                EnterCoords();
+                if (!coords.Contains(','))
+                {
+                    prefix += "Re";
+                    continue;
+                }
+                splitedCoords = coords.Split(",");
+                if (coords.Length<=2 ||splitedCoords.Length != 2)
+                {
+                    prefix += "Re";
+                    continue;
+                    //EnterCoords();
+                }
+                if (int.Parse(splitedCoords[0]) < 0 || int.Parse(splitedCoords[0]) > 9 || splitedCoords[1][0] - 'A' < 0 || splitedCoords[1][0] - 'A' > 9)
+                {
+                    prefix += "Re";
+                    continue;
+                    //EnterCoords();
+                }
             }
+            catch
+            {
+                continue;
+            }
+            break;
         }
+        prefix = "";
         return (int.Parse(splitedCoords[0]), splitedCoords[1][0] - 'A');
     }
 

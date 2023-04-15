@@ -29,34 +29,6 @@ public class Server_Client
         Console.WriteLine("The client has connected: {0}", client.Client.RemoteEndPoint);
 
         stream = client.GetStream();
-        /*
-        ServerRead();
-        //Console.WriteLine("Клієнт надіслав повідомлення: {0}", message);
-
-        byte[] response = Encoding.UTF8.GetBytes("Повідомлення отримано на сервері!");
-        stream.Write(response, 0, response.Length);
-        Console.WriteLine("Відповідь надіслана до клієнта");
-
-        while (true)
-        {
-
-            while(Console.KeyAvailable)
-            {
-                string massage = "";
-                massage = Console.ReadLine();
-
-                if(massage != "")
-                {
-                    byte[] _response = Encoding.UTF8.GetBytes(massage);
-                    stream.Write(_response, 0, _response.Length);
-
-                }
-            }
-            if(!reading)
-                ServerRead();
-
-        }
-        */
     }
     public void StopServer()
     {
@@ -67,7 +39,6 @@ public class Server_Client
     {
             byte[] _response = Encoding.UTF8.GetBytes(message);
             stream.Write(_response, 0, _response.Length);
-
     }
 
     public void StartClient()
@@ -82,40 +53,6 @@ public class Server_Client
 
         stream = client.GetStream();
 
-        /*string message = "Привіт, сервер!";
-        byte[] data = Encoding.UTF8.GetBytes(message);
-        stream.Write(data, 0, data.Length);
-        Console.WriteLine("Повідомлення надіслано до сервера: {0}", message);
-
-        data = new byte[1024];
-        int bytes = stream.Read(data, 0, data.Length);
-        message = Encoding.UTF8.GetString(data, 0, bytes);
-        Console.WriteLine("Відповідь сервера: {0}", message);
-
-        while (true)
-        {
-            data = new byte[1024];
-            int _bytes = stream.Read(data, 0, data.Length);
-            message = Encoding.UTF8.GetString(data, 0, _bytes);
-            Console.WriteLine("Відповідь сервера: {0}", message);
-            while(true)
-            {
-                while (Console.KeyAvailable)
-                {
-                    string _massage = "";
-                    _massage = Console.ReadLine();
-                    if (_massage != "")
-                    {
-                        byte[] _data = Encoding.UTF8.GetBytes(_massage);
-                        stream.Write(_data, 0, _data.Length);
-                        Console.WriteLine("Повідомлення надіслано до сервера: {0}", _massage);
-                    }
-                }
-                if(!reading)
-                    ClientRead(stream);
-            }
-        }
-        */
     }
     public void StopClient() => client.Close();
 
