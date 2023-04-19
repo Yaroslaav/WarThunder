@@ -22,7 +22,7 @@ public class Game
     public GameMode gameMode { get; private set; }
 
     private bool isPlaying;
-    private int maxShipsAmount = 1;
+    private int maxShipsAmount = 10;
 
     private Field ownField = new Field();
     private Field enemyField = new Field();

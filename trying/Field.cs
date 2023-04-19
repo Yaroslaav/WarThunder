@@ -23,7 +23,7 @@
             }
         }
         if (fieldType == FieldType.Own)
-            SpawnShips(cells, 1);
+            SpawnShips(cells, 10);
 
     }
     public void SpawnShips(Cell[,] cells, int shipsAmount)
