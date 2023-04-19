@@ -6,8 +6,8 @@ public enum FieldType
 }
 public static class GenerateFieldExtension
 {
-    static int width = 10;
-    static int height = 10;
+    const int width = 10;
+    const int height = 10;
     public static void UpdateFieldOnScreen(this Cell[,] cells, FieldType type)
     {
         StringBuilder sb = new StringBuilder();

@@ -32,27 +32,6 @@ public class Game
     private int ownScore = 0;
     private int enemyScore = 0;
 
-
-    #region DLL
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool GetConsoleMode(IntPtr handle, out int mode);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr GetStdHandle(int handle);
-
-    private static IntPtr Screen;
-
-    private void SetupDLL()
-    {
-        var handle = GetStdHandle(-11);
-        int mode;
-        GetConsoleMode(handle, out mode);
-        SetConsoleMode(handle, mode | 0x4);
-    }
-    #endregion
-
     public void Start()
     {
         SetupDLL();
@@ -109,19 +88,6 @@ public class Game
         }
         Stop();
     }
-
-    private (int, int) GetRandomFreeCell(Cell[,] _cells)
-    {
-        int x = rand.Next(0, 10);
-        int y = rand.Next(0, 10);
-        while (_cells[y,x].type != CellType.Water)
-        {
-            x = rand.Next(0, 10);
-            y = rand.Next(0, 10);
-        }
-        return (x,y);
-    }
-
     public void Stop()
     {
         SetWinner();
@@ -131,6 +97,31 @@ public class Game
             server_client.OnRead -= CheckMessageFromAnotherPlayer;
             server_client.Stop();
         }
+    }
+    public void GenerateMainMenu()
+    {
+        Console.Clear();
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Press `0` then `Enter` to play with player");
+        sb.AppendLine("Press `1` then `Enter` to play with AI");
+        Console.WriteLine(sb.ToString());
+        string _mode = Console.ReadLine();
+
+        switch (_mode)
+        {
+            case "0":
+                gameMode = GameMode.PvP;
+                break;
+            case "1":
+                gameMode = GameMode.PvAI;
+                break;
+            default:
+                Console.WriteLine("you must just press `0` or `1` then `Enter`");
+                GenerateMainMenu();
+                break;
+        }
+
     }
     public void SetClientOrServer()
     {
@@ -155,6 +146,71 @@ public class Game
                 break;
         }
 
+    }
+    public (int, int) EnterCoords()
+    {
+        string prefix = "";
+        string[] splitedCoords;
+
+        int x;
+        int y;
+
+        while (true)
+        {
+            UpdateAllScreen();
+            Console.Write(prefix + "Enter coords like `1,A`: ");
+            string coords = Console.ReadLine();
+            try
+            {
+                if (!coords.Contains(','))
+                {
+                    prefix += "Re";
+                    continue;
+                }
+                splitedCoords = coords.Split(",");
+                if (coords.Length<=2 ||splitedCoords.Length != 2)
+                {
+                    prefix += "Re";
+                    continue;
+                }
+
+                x = int.Parse(splitedCoords[0]);
+                y = splitedCoords[1][0] - 'A';
+
+                if (x < 0 || x > 9 || y < 0 || y > 9)
+                {
+                    prefix += "Re";
+                    continue;
+                }
+                if (enemyField.GetCellType(x,y) != CellType.Water)
+                {
+                    prefix += "Re";
+                    continue;
+                }
+            }
+            catch
+            {
+                continue;
+            }
+            break;
+        }
+        UpdateAllScreen();
+        return (x, y);
+    }
+    public bool CoordsProcessing(Field _field, int x, int y)
+    {
+        bool hitInShip = false;
+        switch (_field.cells[y, x].type)
+        {
+            case CellType.Water:
+                _field.SetCellType(CellType.Shoted, x, y);
+                break;
+            case CellType.Ship:
+                hitInShip = true;
+                _field.SetCellType(CellType.ShotedInShip, x, y);
+                break;
+        }
+        return hitInShip;
     }
     public void CheckMessageFromAnotherPlayer(string message)
     {
@@ -215,70 +271,16 @@ public class Game
             isPlaying = false;
     }
 
-    public bool CoordsProcessing(Field _field, int x, int y)
+    private (int, int) GetRandomFreeCell(Cell[,] _cells)
     {
-        bool hitInShip = false;
-        switch (_field.cells[y, x].type)
+        int x = rand.Next(0, 10);
+        int y = rand.Next(0, 10);
+        while (_cells[y,x].type != CellType.Water)
         {
-            case CellType.Water:
-                _field.SetCellType(CellType.Shoted, x, y);
-                break;
-            case CellType.Ship:
-                hitInShip = true;
-                _field.SetCellType(CellType.ShotedInShip, x, y);
-                break;
+            x = rand.Next(0, 10);
+            y = rand.Next(0, 10);
         }
-        return hitInShip;
-    }
-    public (int, int) EnterCoords()
-    {
-        string prefix = "";
-        string[] splitedCoords;
-
-        int x;
-        int y;
-
-        while (true)
-        {
-            UpdateAllScreen();
-            Console.Write(prefix + "Enter coords like `1,A`: ");
-            string coords = Console.ReadLine();
-            try
-            {
-                if (!coords.Contains(','))
-                {
-                    prefix += "Re";
-                    continue;
-                }
-                splitedCoords = coords.Split(",");
-                if (coords.Length<=2 ||splitedCoords.Length != 2)
-                {
-                    prefix += "Re";
-                    continue;
-                }
-
-                x = int.Parse(splitedCoords[0]);
-                y = splitedCoords[1][0] - 'A';
-
-                if (x < 0 || x > 9 || y < 0 || y > 9)
-                {
-                    prefix += "Re";
-                    continue;
-                }
-                if (enemyField.GetCellType(x,y) != CellType.Water)
-                {
-                    prefix += "Re";
-                    continue;
-                }
-            }
-            catch
-            {
-                continue;
-            }
-            break;
-        }
-        UpdateAllScreen();
-        return (x, y);
+        return (x,y);
     }
     public void UpdateAllScreen()
     {
@@ -290,31 +292,6 @@ public class Game
         state = lastState;
     }
 
-    public void GenerateMainMenu()
-    {
-        Console.Clear();
-
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine("Press `0` then `Enter` to play with player");
-        sb.AppendLine("Press `1` then `Enter` to play with AI");
-        Console.WriteLine(sb.ToString());
-        string _mode = Console.ReadLine();
-
-        switch (_mode)
-        {
-            case "0":
-                gameMode = GameMode.PvP;
-                break;
-            case "1":
-                gameMode = GameMode.PvAI;
-                break;
-            default:
-                Console.WriteLine("you must just press `0` or `1` then `Enter`");
-                GenerateMainMenu();
-                break;
-        }
-
-    }
     private void SetWinner()
     {
         Console.Clear();
@@ -325,4 +302,25 @@ public class Game
     }
     private string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";
 
+    #region DLL
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool GetConsoleMode(IntPtr handle, out int mode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetStdHandle(int handle);
+
+    private static IntPtr Screen;
+
+    private void SetupDLL()
+    {
+        var handle = GetStdHandle(-11);
+        int mode;
+        GetConsoleMode(handle, out mode);
+        SetConsoleMode(handle, mode | 0x4);
+    }
+    #endregion
 }
+
+
