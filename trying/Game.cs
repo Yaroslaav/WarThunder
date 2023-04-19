@@ -82,17 +82,13 @@ public class Game
             {
                 case GameState.YourTurn:
                     {
-                        if (isPlaying)
+                        (int x, int y) = EnterCoords();
+                        if(gameMode == GameMode.PvP)
                         {
-                            (int x, int y) = EnterCoords();
-                            if(gameMode == GameMode.PvP)
-                            {
-                                server_client.SendMessage($"Shot:{x},{y}");
-                            }
-                            CoordsProcessing(enemyField, x, y);
-
-                            state = GameState.EnemyTurn;
+                            server_client.SendMessage($"Shot:{x},{y}");
                         }
+                        CoordsProcessing(enemyField, x, y);
+                        state = GameState.EnemyTurn;
                         break;
                     }
                 case GameState.EnemyTurn:
@@ -184,6 +180,7 @@ public class Game
                 }
                 break;
         }
+        UpdateAllScreen();
         CheckScore();
     }
 
