@@ -1,6 +1,4 @@
-﻿using System;
-
-public class Field
+﻿public class Field
 {
     Random rand = new Random();
 

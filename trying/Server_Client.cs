@@ -6,7 +6,7 @@ public class Server_Client
 {
     public bool reading = false;
 
-    string _message = "";
+    string message = "";
 
     public Action<string> OnRead;
 
@@ -58,8 +58,8 @@ public class Server_Client
                 reading = true;
                 byte[] data = new byte[1024];
                 int bytes = stream.Read(data, 0, data.Length);
-                _message = Encoding.UTF8.GetString(data, 0, bytes );
-                OnRead?.Invoke(_message);
+                message = Encoding.UTF8.GetString(data, 0, bytes );
+                OnRead?.Invoke(message);
                 reading = false;
             });
     }
@@ -70,9 +70,9 @@ public class Server_Client
             reading = true;
             byte[] _data = new byte[1024];
             int _bytesRead = stream.Read(_data, 0, _data.Length);
-            _message = Encoding.UTF8.GetString(_data, 0, _bytesRead);
+            message = Encoding.UTF8.GetString(_data, 0, _bytesRead);
 
-            OnRead?.Invoke(_message);
+            OnRead?.Invoke(message);
             reading = false;
         });
     }

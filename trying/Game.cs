@@ -1,7 +1,5 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 public enum GameState
 {
@@ -101,7 +99,11 @@ public class Game
                     {
                         if(gameMode != GameMode.PvP)
                         {
-                            CoordsProcessing(ownField, rand.Next(0, 10), rand.Next(0, 10));
+                            (int x, int y) = GetRandomFreeCell(enemyField.cells);
+                            if(CoordsProcessing(ownField, x, y))
+                            {
+                                enemyScore++;
+                            }
                             state = GameState.YourTurn;
                         }
                         break;
@@ -111,12 +113,28 @@ public class Game
         }
         Stop();
     }
+
+    private (int, int) GetRandomFreeCell(Cell[,] _cells)
+    {
+        int x = rand.Next(0, 10);
+        int y = rand.Next(0, 10);
+        while (_cells[y,x].type != CellType.Water)
+        {
+            x = rand.Next(0, 10);
+            y = rand.Next(0, 10);
+        }
+        return (x,y);
+    }
+
     public void Stop()
     {
         SetWinner();
         Thread.Sleep(10000);
-        server_client.OnRead -= CheckMessageFromAnotherPlayer;
-        server_client.Stop();
+        if(gameMode == GameMode.PvP)
+        {
+            server_client.OnRead -= CheckMessageFromAnotherPlayer;
+            server_client.Stop();
+        }
     }
     public void SetClientOrServer()
     {
@@ -153,13 +171,7 @@ public class Game
                     int x = int.Parse(allInfo[0]);
                     int y = int.Parse(allInfo[1]);
                    
-                    CoordsProcessing(ownField, x, y);
-                    if (ownField.GetCellType(x, y) == CellType.ShotedInShip)
-                        enemyScore++;
-                    server_client.SendMessage($"Coords:{x},{y},{ownField.GetCellType(x,y)}");
-                    ownField.cells.UpdateFieldOnScreen(FieldType.Own);
-                    state = GameState.YourTurn;
-
+                    OnHitInYourField(x, y);
                 }
                 break;
             case "Coords":
@@ -168,21 +180,36 @@ public class Game
                     int y = int.Parse(allInfo[1]);
                     string cellType = allInfo[2];
 
-                    if(cellType == CellType.Shoted.ToString())
-                    {
-                        enemyField.SetCellType(CellType.Shoted,x,y);
-                    }else if(cellType == CellType.ShotedInShip.ToString())
-                    {
-
-                        enemyField.SetCellType(CellType.ShotedInShip,x,y);
-                        ownScore++;    
-                    }
-                    enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy);
-
+                    OnHitInEnemyField(x, y, cellType);
                 }
                 break;
         }
         CheckScore();
+    }
+
+    private void OnHitInYourField(int x, int y)
+    {
+        CoordsProcessing(ownField, x, y);
+        if (ownField.GetCellType(x, y) == CellType.ShotedInShip)
+            enemyScore++;
+        server_client.SendMessage($"Coords:{x},{y},{ownField.GetCellType(x, y)}");
+        ownField.cells.UpdateFieldOnScreen(FieldType.Own);
+
+        state = GameState.YourTurn;
+    }
+    private void OnHitInEnemyField(int x, int y, string cellType)
+    {
+        if (cellType == CellType.Shoted.ToString())
+        {
+            enemyField.SetCellType(CellType.Shoted, x, y);
+        }
+        else if (cellType == CellType.ShotedInShip.ToString())
+        {
+
+            enemyField.SetCellType(CellType.ShotedInShip, x, y);
+            ownScore++;
+        }
+        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy);
     }
 
     private void CheckScore()
@@ -191,17 +218,20 @@ public class Game
             isPlaying = false;
     }
 
-    public void CoordsProcessing(Field _field, int x, int y)
+    public bool CoordsProcessing(Field _field, int x, int y)
     {
+        bool hitInShip = false;
         switch (_field.cells[y, x].type)
         {
             case CellType.Water:
                 _field.SetCellType(CellType.Shoted, x, y);
                 break;
             case CellType.Ship:
+                hitInShip = true;
                 _field.SetCellType(CellType.ShotedInShip, x, y);
                 break;
         }
+        return hitInShip;
     }
     public (int, int) EnterCoords()
     {
