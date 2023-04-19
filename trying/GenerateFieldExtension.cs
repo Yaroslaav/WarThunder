@@ -1,13 +1,21 @@
 ﻿using System.Text;
+public enum FieldType
+{
+    Own,
+    Enemy,
+}
 public static class GenerateFieldExtension
 {
-    public static void UpdateFieldOnScreen(this Cell[,] cells, int height, int width, bool ownField)
+    static int width = 10;
+    static int height = 10;
+    public static void UpdateFieldOnScreen(this Cell[,] cells, FieldType type)
     {
-
         StringBuilder sb = new StringBuilder();
-        sb.Append(ownField ? SetColor(0, 255, 0): SetColor(255, 0, 0));
-        sb.Append(ownField ? "Your table\n" : "Enemy table\n");
+
+        sb.Append(type == FieldType.Own ? SetColor(0, 255, 0): SetColor(255, 0, 0));
+        sb.Append(type == FieldType.Own ? "Your table\n" : "Enemy table\n");
         sb.AppendLine($"{SetColor(255, 255, 255)}  0 1 2 3 4 5 6 7 8 9");
+
         for (int y = 0; y < height; y++)
         {
 
@@ -35,9 +43,10 @@ public static class GenerateFieldExtension
             sb.Append(SetColor(255,255,255));
         }
 
-        Console.SetCursorPosition(0, ownField ? 1 : 15);
+        Console.SetCursorPosition(0, type == FieldType.Own ? 1 : 15);
         Console.WriteLine(sb);
     }
+
     private static string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";
 
 
