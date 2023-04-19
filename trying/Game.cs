@@ -157,8 +157,9 @@ public class Game
 
         while (true)
         {
-            UpdateAllScreen();
-            Console.Write(prefix + "Enter coords like `1,A`: ");
+            //UpdateAllScreen();
+            Console.SetCursorPosition(0,27);
+            Console.WriteLine(prefix + "Enter coords like `1,A`: ");
             string coords = Console.ReadLine();
             try
             {
