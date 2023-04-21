@@ -12,6 +12,7 @@ public enum GameMode
 {
     PvP,
     PvAI,
+    AIvAI,
 }
 
 public class Game
@@ -22,10 +23,10 @@ public class Game
     public GameMode gameMode { get; private set; }
 
     private bool isPlaying;
-    private int maxShipsAmount = 10;
+    private int maxShipsAmount = 1;
 
-    private Field ownField = new Field();
-    private Field enemyField = new Field();
+    private Field ownField;
+    private Field enemyField;
 
     public Server_Client server_client = new Server_Client();
 
@@ -40,6 +41,9 @@ public class Game
             SetClientOrServer();
         server_client.OnRead += CheckMessageFromAnotherPlayer;
 
+        ownField = new Field(gameMode);
+        enemyField = new Field(gameMode);
+        Console.SetCursorPosition(0, 0);
         Console.Clear();
         ownField.GenerateField(FieldType.Own);
         enemyField.GenerateField(FieldType.Enemy);
@@ -61,11 +65,19 @@ public class Game
             {
                 case GameState.YourTurn:
                     {
-                        (int x, int y) = EnterCoords();
+                        int x = 0;
+                        int y = 0;
+                        if (gameMode != GameMode.AIvAI)
+                            (x, y) = EnterCoords();
+                        else
+                            (x, y) = GetRandomFreeCell(enemyField.cells);
+
                         if(gameMode == GameMode.PvP)
                         {
                             server_client.SendMessage($"Shot:{x},{y}");
                         }
+                        if(gameMode == GameMode.AIvAI)
+                            Thread.Sleep(1000);
                         CoordsProcessing(enemyField, x, y);
                         state = GameState.EnemyTurn;
                         break;
@@ -74,8 +86,10 @@ public class Game
                     {
                         if(gameMode != GameMode.PvP)
                         {
-                            (int x, int y) = GetRandomFreeCell(enemyField.cells);
-                            if(CoordsProcessing(ownField, x, y))
+                            (int x, int y) = GetRandomFreeCell(ownField.cells);
+                            if (gameMode == GameMode.AIvAI)
+                                Thread.Sleep(1000);
+                            if (CoordsProcessing(ownField, x, y))
                             {
                                 enemyScore++;
                             }
@@ -100,11 +114,13 @@ public class Game
     }
     public void GenerateMainMenu()
     {
+        Console.SetCursorPosition(0, 0);
         Console.Clear();
 
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("Press `0` then `Enter` to play with player");
         sb.AppendLine("Press `1` then `Enter` to play with AI");
+        sb.AppendLine("Press `2` then `Enter` to starr battle between AI and AI");
         Console.WriteLine(sb.ToString());
         string _mode = Console.ReadLine();
 
@@ -115,6 +131,9 @@ public class Game
                 break;
             case "1":
                 gameMode = GameMode.PvAI;
+                break;
+            case "2":
+                gameMode = GameMode.AIvAI;
                 break;
             default:
                 Console.WriteLine("you must just press `0` or `1` then `Enter`");
@@ -155,9 +174,9 @@ public class Game
         int x;
         int y;
 
+
         while (true)
         {
-            //UpdateAllScreen();
             Console.SetCursorPosition(0,27);
             Console.WriteLine(prefix + "Enter coords like `1,A`: ");
             string coords = Console.ReadLine();
@@ -176,14 +195,14 @@ public class Game
                 }
 
                 x = int.Parse(splitedCoords[0]);
-                y = splitedCoords[1][0] - 'A';
+                y = char.ToUpper(splitedCoords[1][0]) - 'A';
 
                 if (x < 0 || x > 9 || y < 0 || y > 9)
                 {
                     prefix += "Re";
                     continue;
                 }
-                if (enemyField.GetCellType(x,y) != CellType.Water)
+                if (enemyField.GetCellType(x,y) != CellType.Water && enemyField.GetCellType(x, y) != CellType.Ship)
                 {
                     prefix += "Re";
                     continue;
@@ -195,7 +214,6 @@ public class Game
             }
             break;
         }
-        UpdateAllScreen();
         return (x, y);
     }
     public bool CoordsProcessing(Field _field, int x, int y)
@@ -211,6 +229,7 @@ public class Game
                 _field.SetCellType(CellType.ShotedInShip, x, y);
                 break;
         }
+        UpdateAllScreen();
         return hitInShip;
     }
     public void CheckMessageFromAnotherPlayer(string message)
@@ -237,7 +256,6 @@ public class Game
                 }
                 break;
         }
-        UpdateAllScreen();
         CheckScore();
     }
 
@@ -247,7 +265,7 @@ public class Game
         if (ownField.GetCellType(x, y) == CellType.ShotedInShip)
             enemyScore++;
         server_client.SendMessage($"Coords:{x},{y},{ownField.GetCellType(x, y)}");
-        ownField.cells.UpdateFieldOnScreen(FieldType.Own);
+        ownField.cells.UpdateFieldOnScreen(FieldType.Own, gameMode);
 
         state = GameState.YourTurn;
     }
@@ -263,7 +281,7 @@ public class Game
             enemyField.SetCellType(CellType.ShotedInShip, x, y);
             ownScore++;
         }
-        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy);
+        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy, gameMode);
     }
 
     private void CheckScore()
@@ -276,7 +294,7 @@ public class Game
     {
         int x = rand.Next(0, 10);
         int y = rand.Next(0, 10);
-        while (_cells[y,x].type != CellType.Water)
+        while (_cells[y,x].type != CellType.Water && _cells[y, x].type != CellType.Ship)
         {
             x = rand.Next(0, 10);
             y = rand.Next(0, 10);
@@ -286,19 +304,21 @@ public class Game
     public void UpdateAllScreen()
     {
         GameState lastState = state;
+
         state = GameState.UpdatingField;
+        Console.SetCursorPosition(0, 0);
         Console.Clear();
-        ownField.cells.UpdateFieldOnScreen(FieldType.Own);
-        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy);
+        ownField.cells.UpdateFieldOnScreen(FieldType.Own, gameMode);
+        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy, gameMode);
         state = lastState;
     }
 
     private void SetWinner()
     {
+        Console.SetCursorPosition(0, 0);
         Console.Clear();
         Console.WriteLine(ownScore >= maxShipsAmount ? SetColor(0,255,0) : SetColor(255,0,0));
         Console.WriteLine(ownScore >= maxShipsAmount ? "You WIN!!!" : "You Lose!!!");
-
         isPlaying = false;
     }
     private string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";

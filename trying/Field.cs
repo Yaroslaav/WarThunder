@@ -2,10 +2,17 @@
 {
     Random rand = new Random();
 
+    private GameMode gameMode;
+
     const int width = 10;
     const int height = 10;
 
     public Cell[,] cells { get; private set; }
+
+    public Field(GameMode _gameMode)
+    {
+        gameMode = _gameMode;
+    }
 
     public FieldType fieldType;
     public void GenerateField(FieldType type)
@@ -22,8 +29,8 @@
 
             }
         }
-        if (fieldType == FieldType.Own)
-            SpawnShips(cells, 10);
+        if (fieldType == FieldType.Own || gameMode != GameMode.PvP)
+            SpawnShips(cells, 1);
 
     }
     public void SpawnShips(Cell[,] cells, int shipsAmount)

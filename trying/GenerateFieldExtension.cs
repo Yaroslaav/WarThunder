@@ -8,12 +8,14 @@ public static class GenerateFieldExtension
 {
     const int width = 10;
     const int height = 10;
-    public static void UpdateFieldOnScreen(this Cell[,] cells, FieldType type)
+    public static void UpdateFieldOnScreen(this Cell[,] cells, FieldType type, GameMode gameMode)
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append(type == FieldType.Own ? SetColor(0, 255, 0): SetColor(255, 0, 0));
-        sb.Append(type == FieldType.Own ? "Your table\n" : "Enemy table\n");
+        bool ownField = type == FieldType.Own;
+
+        sb.Append(ownField ? SetColor(0, 255, 0): SetColor(255, 0, 0));
+        sb.Append(ownField ? "Your table\n" : "Enemy table\n");
         sb.AppendLine($"{SetColor(255, 255, 255)}  0 1 2 3 4 5 6 7 8 9");
 
         for (int y = 0; y < height; y++)
@@ -28,7 +30,10 @@ public static class GenerateFieldExtension
                         sb.Append($"{SetColor(0, 0, 255)} .");
                         break;
                     case CellType.Ship:
-                        sb.Append($"{SetColor(150, 150, 150)} #");
+                        if(ownField || gameMode == GameMode.AIvAI)
+                            sb.Append($"{SetColor(150, 150, 150)} #");
+                        else
+                            sb.Append($"{SetColor(0, 0, 255)} .");
                         break;
                     case CellType.Shoted:
                         sb.Append($"{SetColor(100,100,100)} X");
@@ -43,7 +48,7 @@ public static class GenerateFieldExtension
             sb.Append(SetColor(255,255,255));
         }
 
-        Console.SetCursorPosition(0, type == FieldType.Own ? 1 : 15);
+        Console.SetCursorPosition(0, ownField ? 1 : 15);
         Console.WriteLine(sb);
     }
 
