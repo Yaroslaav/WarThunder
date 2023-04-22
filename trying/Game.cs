@@ -53,6 +53,7 @@ public class Game
     public void StartNextRound()
     {
         Thread.Sleep(3000);
+        Console.WriteLine(SetColor(255,255,255));
         if(gameMode == GameMode.PvP)
             server_client.OnRead += CheckMessageFromAnotherPlayer;
 
@@ -217,6 +218,7 @@ public class Game
 
         while (true)
         {
+            UpdateAllScreen();
             Console.SetCursorPosition(0,27);
 
             Console.WriteLine("Enter coords like `1,A`: ");
