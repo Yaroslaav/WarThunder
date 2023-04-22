@@ -4,12 +4,14 @@ public enum FieldType
     Own,
     Enemy,
 }
-public static class GenerateFieldExtension
+public static class UpdateFieldExtensions
 {
     const int width = 10;
     const int height = 10;
     public static void UpdateFieldOnScreen(this Cell[,] cells, FieldType type, GameMode gameMode)
     {
+        if(cells == null) 
+            return;
         StringBuilder sb = new StringBuilder();
 
         bool ownField = type == FieldType.Own;
@@ -33,7 +35,7 @@ public static class GenerateFieldExtension
                         if(ownField || gameMode == GameMode.AIvAI)
                             sb.Append($"{SetColor(150, 150, 150)} #");
                         else
-                            sb.Append($"{SetColor(0, 0, 255)} .");
+                            sb.Append($"{SetColor(0, 0, 255)} %");
                         break;
                     case CellType.Shoted:
                         sb.Append($"{SetColor(100,100,100)} X");
@@ -51,7 +53,6 @@ public static class GenerateFieldExtension
         Console.SetCursorPosition(0, ownField ? 1 : 15);
         Console.WriteLine(sb);
     }
-
     private static string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";
 
 
