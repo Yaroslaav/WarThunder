@@ -39,7 +39,8 @@ public class Game
     private int ownWonRoundsAmount = 0;
     private int enemyWonRoundsAmount = 0;
 
-
+    private bool ownFieldWasChanged = false;
+    private bool enemyFieldWasChanged = false;
 
     public void Start()
     {
@@ -52,26 +53,29 @@ public class Game
     }
     public void StartNextRound()
     {
+        ownScore = 0;
+        enemyScore = 0;
+        currentRound++;
+
         Thread.Sleep(3000);
+
         Console.WriteLine(SetColor(255,255,255));
         if(gameMode == GameMode.PvP)
             server_client.OnRead += CheckMessageFromAnotherPlayer;
 
-        ownScore = 0;
-        enemyScore = 0;
 
         ownField = new Field(gameMode);
         enemyField = new Field(gameMode);
+
         Console.SetCursorPosition(0, 0);
         Console.Clear();
+
         ownField.GenerateField(FieldType.Own);
         enemyField.GenerateField(FieldType.Enemy);
 
         UpdateAllScreen();
 
         state = server_client.isServer ? GameState.YourTurn : GameState.EnemyTurn;
-
-        currentRound++;
 
         isPlaying = true;
         GameLoop();
@@ -94,6 +98,7 @@ public class Game
                         EnemyTurn();
                         break;
             }
+            TryUpdateFields();
             CheckScore();
         }
         if(currentRound >= maxRoundsAmount)
@@ -116,6 +121,20 @@ public class Game
         {
             server_client.OnRead -= CheckMessageFromAnotherPlayer;
             server_client.Stop();
+        }
+    }
+
+    public void TryUpdateFields()
+    {
+        if (ownFieldWasChanged)
+        {
+            ownField.cells.UpdateFieldOnScreen(FieldType.Own, gameMode);
+            ownFieldWasChanged = false;
+        }
+        if (enemyFieldWasChanged)
+        {
+            enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy, gameMode);
+            enemyFieldWasChanged = false;
         }
     }
 
@@ -320,8 +339,7 @@ public class Game
         if (ownField.GetCellType(x, y) == CellType.ShotedInShip)
             enemyScore++;
         server_client.SendMessage($"HitInEnemyField:{x},{y},{ownField.GetCellType(x, y)}");
-        ownField.cells.UpdateFieldOnScreen(FieldType.Own, gameMode);
-
+        ownFieldWasChanged = true;
         state = GameState.YourTurn;
     }
     private void OnHitInEnemyField(int x, int y, string cellType)
@@ -336,7 +354,7 @@ public class Game
             enemyField.SetCellType(CellType.ShotedInShip, x, y);
             ownScore++;
         }
-        enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy, gameMode);
+        enemyFieldWasChanged = true;
     }
 
     private void CheckScore()
