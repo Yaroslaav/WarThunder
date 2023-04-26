@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "trying", "trying\trying.csproj", "{24995796-1F0F-4FC3-B67E-BD9F081C8291}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameForms", "GameForms\GameForms.csproj", "{09BD576A-42EF-4DBC-BA72-64ABACD4AA33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{24995796-1F0F-4FC3-B67E-BD9F081C8291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24995796-1F0F-4FC3-B67E-BD9F081C8291}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24995796-1F0F-4FC3-B67E-BD9F081C8291}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24995796-1F0F-4FC3-B67E-BD9F081C8291}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09BD576A-42EF-4DBC-BA72-64ABACD4AA33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09BD576A-42EF-4DBC-BA72-64ABACD4AA33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09BD576A-42EF-4DBC-BA72-64ABACD4AA33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09BD576A-42EF-4DBC-BA72-64ABACD4AA33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E48322B2-E5C7-4A73-ACC9-A3E983C94132}
+		SolutionGuid = {80E89863-578B-442E-971B-1F3D50207D7F}
 	EndGlobalSection
 EndGlobal

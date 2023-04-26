@@ -19,6 +19,10 @@ public class Game
 {
     Random rand = new Random();
 
+    SaveLoad saveLoad = new SaveLoad();
+
+    private string playerName;
+
     private int maxRoundsAmount = 3;
     private int currentRound = 0;
 
@@ -45,11 +49,30 @@ public class Game
     public void Start()
     {
         SetupDLL();
-        GenerateMainMenu();
-        if(gameMode == GameMode.PvP)
+        SetLoadedData();
+        //GenerateMainMenu();
+        if (gameMode == GameMode.PvP)
             SetClientOrServer();
 
         StartNextRound();
+    }
+    private void SetLoadedData()
+    {
+        string[] data = saveLoad.Load().ToArray();
+        playerName = data[0];
+        switch(data[1])
+        {
+            case "PvP":
+                gameMode = GameMode.PvP;
+                break;
+            case "PvAI":
+                gameMode = GameMode.PvAI;
+                break;
+            case "AIvAI":
+                gameMode = GameMode.AIvAI;
+                break;
+        }
+
     }
     public void StartNextRound()
     {
@@ -64,8 +87,8 @@ public class Game
             server_client.OnRead += CheckMessageFromAnotherPlayer;
 
 
-        ownField = new Field(gameMode);
-        enemyField = new Field(gameMode);
+        ownField = new Field(gameMode, playerName);
+        enemyField = new Field(gameMode, playerName);
 
         Console.SetCursorPosition(0, 0);
         Console.Clear();
@@ -145,7 +168,7 @@ public class Game
         if (gameMode != GameMode.AIvAI)
             (x, y) = EnterCoords();
         else
-            (x, y) = GetRandomFreeCell(enemyField.cells);
+            (x, y) = enemyField.GetRandomFreeCell();
 
         if (gameMode == GameMode.PvP)
         {
@@ -163,7 +186,7 @@ public class Game
     {
         if (gameMode != GameMode.PvP)
         {
-            (int x, int y) = GetRandomFreeCell(ownField.cells);
+            (int x, int y) = ownField.GetRandomFreeCell();
             if (gameMode == GameMode.AIvAI)
                 Thread.Sleep(400);
             if (CoordsProcessing(ownField, x, y))
@@ -370,17 +393,6 @@ public class Game
         }
     }
 
-    private (int, int) GetRandomFreeCell(Cell[,] _cells)
-    {
-        int x = rand.Next(0, 10);
-        int y = rand.Next(0, 10);
-        while (_cells[y,x].type != CellType.Water && _cells[y, x].type != CellType.Ship)
-        {
-            x = rand.Next(0, 10);
-            y = rand.Next(0, 10);
-        }
-        return (x,y);
-    }
     public void UpdateAllScreen()
     {
         GameState lastState = state;

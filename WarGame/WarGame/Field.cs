@@ -2,6 +2,8 @@
 {
     Random rand = new Random();
 
+    public string ownerName;
+
     private GameMode gameMode;
 
     const int width = 10;
@@ -9,9 +11,10 @@
 
     public Cell[,] cells { get; private set; }
 
-    public Field(GameMode _gameMode)
+    public Field(GameMode _gameMode, string _ownerName)
     {
         gameMode = _gameMode;
+        ownerName = _ownerName;
     }
 
     public FieldType fieldType;
@@ -57,5 +60,17 @@
     }
     public CellType GetCellType(int x, int y) => cells[y, x].type;
     public void SetCellType(CellType type, int x, int y) => cells[y, x].type = type;
-    
+    public (int, int) GetRandomFreeCell()
+    {
+        int x = rand.Next(0, 10);
+        int y = rand.Next(0, 10);
+        while (cells[y, x].type != CellType.Water && cells[y, x].type != CellType.Ship)
+        {
+            x = rand.Next(0, 10);
+            y = rand.Next(0, 10);
+        }
+        return (x, y);
+    }
+
+
 }
