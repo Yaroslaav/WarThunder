@@ -21,6 +21,8 @@ public class Game
 
     SaveLoad saveLoad = new SaveLoad();
 
+    Rounds rounds = new Rounds();
+
     private string playerName;
 
     private int maxRoundsAmount = 3;
@@ -50,11 +52,13 @@ public class Game
     {
         SetupDLL();
         SetLoadedData();
-        //GenerateMainMenu();
+
+        SetActions();
+
         if (gameMode == GameMode.PvP)
             SetClientOrServer();
 
-        StartNextRound();
+        rounds.StartRounds();
     }
     private void SetLoadedData()
     {
@@ -124,16 +128,7 @@ public class Game
             TryUpdateFields();
             CheckScore();
         }
-        if(currentRound >= maxRoundsAmount)
-        {
-            Stop();
-        }
-        else
-        {
-            if (gameMode == GameMode.PvP)
-                server_client.OnRead -= CheckMessageFromAnotherPlayer;
-            StartNextRound();
-        }
+        rounds.TryStartNextRound();
     }
     public void Stop()
     {
@@ -145,6 +140,12 @@ public class Game
             server_client.OnRead -= CheckMessageFromAnotherPlayer;
             server_client.Stop();
         }
+    }
+
+    private void SetActions()
+    {
+        rounds.OnEndMatch += Stop;
+        rounds.OnStartRound += StartNextRound;
     }
 
     public void TryUpdateFields()
@@ -194,37 +195,6 @@ public class Game
                 enemyScore++;
             }
             state = GameState.YourTurn;
-        }
-
-    }
-
-    public void GenerateMainMenu()
-    {
-        Console.SetCursorPosition(0, 0);
-        Console.Clear();
-
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine("Press `0` then `Enter` to play with player");
-        sb.AppendLine("Press `1` then `Enter` to play with AI");
-        sb.AppendLine("Press `2` then `Enter` to starr battle between AI and AI");
-        Console.WriteLine(sb.ToString());
-        string _mode = Console.ReadLine();
-
-        switch (_mode)
-        {
-            case "0":
-                gameMode = GameMode.PvP;
-                break;
-            case "1":
-                gameMode = GameMode.PvAI;
-                break;
-            case "2":
-                gameMode = GameMode.AIvAI;
-                break;
-            default:
-                Console.WriteLine("you must just press `0` or `1` then `Enter`");
-                GenerateMainMenu();
-                break;
         }
 
     }
@@ -436,6 +406,7 @@ public class Game
         SetConsoleMode(handle, mode | 0x4);
     }
     #endregion
+
 }
 
 
