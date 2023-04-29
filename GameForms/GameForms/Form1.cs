@@ -4,10 +4,15 @@ namespace GameForms
 {
     public partial class Form1 : Form
     {
-        SaveLoad saveLoad = new SaveLoad();
+        public SaveLoad saveLoad = new SaveLoad();
+        public string pathToSavedFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
+        public Profiles profiles;
+
+        public Profile currentProfile;
         public Form1()
         {
             InitializeComponent();
+            profiles = saveLoad.LoadAllProfiles();
         }
 
         private string[] GetAllData()
@@ -23,29 +28,10 @@ namespace GameForms
 
         private void button1_Click(object sender, EventArgs e)
         {
-            string selectedGameMode = GameModeComboBox.Items[GameModeComboBox.SelectedIndex].ToString();
-            saveLoad.Save(GetAllData());
-                    Process.Start("WarGame.exe");
+            saveLoad.SaveGame(GetAllData());
+            Process.Start("WarGame.exe");
         }
 
-        private void toolStripContainer1_ContentPanel_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void toolStripContainer1_ContentPanel_Load_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void textBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
 
         private void comboBox1_SelectedIndexChanged_1(object sender, EventArgs e)
         {
@@ -68,11 +54,103 @@ namespace GameForms
                     break;
             }
         }
-
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
 
         }
+        private void toolStripContainer1_ContentPanel_Load(object sender, EventArgs e)
+        {
 
+        }
+        private void toolStripContainer1_ContentPanel_Load_1(object sender, EventArgs e)
+        {
+
+        }
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
+        private void textBox3_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void LogInButton_Click(object sender, EventArgs e)
+        {
+            LogButton.Visible = true;
+            SignButton.Visible = false;
+        }
+
+        private void SignUpButton_Click(object sender, EventArgs e)
+        {
+            LogButton.Visible = false;
+            SignButton.Visible = true;
+
+        }
+
+        private void LogOutButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void LogButton_Click(object sender, EventArgs e)
+        {
+            Profile foundProfile = null;
+            for (int i = 0; i < profiles.profiles.Count; i++)
+            {
+                if (profiles.profiles[i].Login == LoginTextBox.Text && profiles.profiles[i].Password == PasswordTextBox.Text)
+                {
+                    foundProfile = profiles.profiles[i];
+                    break;
+                }
+            }
+
+            if (foundProfile == null)
+            {
+                MessageBox.Show("Wrong password or login!");
+                LoginTextBox.Text = string.Empty;
+                PasswordTextBox.Text = string.Empty;
+                return;
+            }
+
+            currentProfile = foundProfile;
+            CurrentPlayerNameBox.Text = currentProfile.Login;
+
+            LoginTextBox.Text = string.Empty;
+            PasswordTextBox.Text = string.Empty;
+        }
+
+        private void PasswordTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void LoginTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void SignButton_Click(object sender, EventArgs e)
+        {
+            Profile foundProfile = null;
+            for (int i = 0; i < profiles.profiles.Count; i++)
+            {
+                if (profiles.profiles[i].Login == LoginTextBox.Text && profiles.profiles[i].Password == PasswordTextBox.Text)
+                {
+                    foundProfile = profiles.profiles[i];
+                    break;
+                }
+            }
+
+            if (foundProfile != null)
+            {
+                MessageBox.Show("This accaunt already exists");
+                return;
+            }
+
+            profiles.profiles.Add(new Profile(LoginTextBox.Text, PasswordTextBox.Text));
+            saveLoad.SaveProfiles(profiles);
+            LoginTextBox.Text = string.Empty;
+            PasswordTextBox.Text = string.Empty;
+        }
     }
 }

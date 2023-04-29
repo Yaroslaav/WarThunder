@@ -1,28 +1,43 @@
-﻿using System;
+﻿public enum Winner 
+{
+    You,
+    Enemy,
+}
 
 public class Rounds
 {
-    public int maxRounds = 5;
+    public int maxRoundsToWin = 3;
+
     public int currentRound = 0;
 
+    public int ownWonRoundsAmount = 0;
+    public int enemyWonRoundsAmount = 0;
+
     public Action OnStartRound;
-    public Action OnEndMatch;
+    public Action<Winner> OnEndMatch;
+
 
     public void StartRounds() => TryStartNextRound();
 
     public void TryStartNextRound()
     {
-        
-        currentRound++;
-        if(currentRound >= maxRounds)
+        if(ownWonRoundsAmount >= maxRoundsToWin)
         {
-            OnEndMatch?.Invoke();
+            OnEndMatch?.Invoke(Winner.You);
+            return;
         }
-        else
+        else if(enemyWonRoundsAmount >= maxRoundsToWin)
         {
-            StartNextRound();
+            OnEndMatch?.Invoke(Winner.Enemy);
+            return;
         }
+        StartNextRound();
     }
-    public void StartNextRound() => OnStartRound?.Invoke();
+    public void StartNextRound()
+    {
+        currentRound++;
+        OnStartRound?.Invoke();
+    }
+
     
 }

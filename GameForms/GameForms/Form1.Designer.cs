@@ -34,6 +34,14 @@
             BotLevelsText = new TextBox();
             GameModeText = new TextBox();
             GameModeComboBox = new ComboBox();
+            LogOutButton = new Button();
+            LogInButton = new Button();
+            SignUpButton = new Button();
+            LoginTextBox = new TextBox();
+            PasswordTextBox = new TextBox();
+            LogButton = new Button();
+            SignButton = new Button();
+            CurrentPlayerNameBox = new TextBox();
             SuspendLayout();
             // 
             // button1
@@ -103,11 +111,97 @@
             GameModeComboBox.ValueMember = "1";
             GameModeComboBox.SelectedIndexChanged += comboBox1_SelectedIndexChanged_1;
             // 
+            // LogOutButton
+            // 
+            LogOutButton.Location = new Point(713, 12);
+            LogOutButton.Name = "LogOutButton";
+            LogOutButton.Size = new Size(75, 23);
+            LogOutButton.TabIndex = 6;
+            LogOutButton.Text = "LogOut";
+            LogOutButton.UseVisualStyleBackColor = true;
+            LogOutButton.Click += LogOutButton_Click;
+            // 
+            // LogInButton
+            // 
+            LogInButton.Location = new Point(632, 12);
+            LogInButton.Name = "LogInButton";
+            LogInButton.Size = new Size(75, 23);
+            LogInButton.TabIndex = 7;
+            LogInButton.Text = "LogIn";
+            LogInButton.UseVisualStyleBackColor = true;
+            LogInButton.Click += LogInButton_Click;
+            // 
+            // SignUpButton
+            // 
+            SignUpButton.Location = new Point(713, 12);
+            SignUpButton.Name = "SignUpButton";
+            SignUpButton.Size = new Size(75, 23);
+            SignUpButton.TabIndex = 8;
+            SignUpButton.Text = "SignUp";
+            SignUpButton.UseVisualStyleBackColor = true;
+            SignUpButton.Click += SignUpButton_Click;
+            // 
+            // LoginTextBox
+            // 
+            LoginTextBox.Location = new Point(663, 41);
+            LoginTextBox.Name = "LoginTextBox";
+            LoginTextBox.PlaceholderText = "Enter login";
+            LoginTextBox.Size = new Size(100, 23);
+            LoginTextBox.TabIndex = 9;
+            LoginTextBox.TextChanged += LoginTextBox_TextChanged;
+            // 
+            // PasswordTextBox
+            // 
+            PasswordTextBox.Location = new Point(663, 70);
+            PasswordTextBox.Name = "PasswordTextBox";
+            PasswordTextBox.PlaceholderText = "Enter password";
+            PasswordTextBox.Size = new Size(100, 23);
+            PasswordTextBox.TabIndex = 10;
+            PasswordTextBox.TextChanged += PasswordTextBox_TextChanged;
+            // 
+            // LogButton
+            // 
+            LogButton.Location = new Point(673, 108);
+            LogButton.Name = "LogButton";
+            LogButton.Size = new Size(75, 23);
+            LogButton.TabIndex = 11;
+            LogButton.Text = "LogIn";
+            LogButton.UseVisualStyleBackColor = true;
+            LogButton.Click += LogButton_Click;
+            // 
+            // SignButton
+            // 
+            SignButton.Location = new Point(673, 108);
+            SignButton.Name = "SignButton";
+            SignButton.Size = new Size(75, 23);
+            SignButton.TabIndex = 12;
+            SignButton.Text = "SignUp";
+            SignButton.UseVisualStyleBackColor = true;
+            SignButton.Click += SignButton_Click;
+            // 
+            // CurrentPlayerNameBox
+            // 
+            CurrentPlayerNameBox.Enabled = false;
+            CurrentPlayerNameBox.Location = new Point(360, 12);
+            CurrentPlayerNameBox.Name = "CurrentPlayerNameBox";
+            CurrentPlayerNameBox.Size = new Size(161, 23);
+            CurrentPlayerNameBox.TabIndex = 13;
+            CurrentPlayerNameBox.Text = "Guest";
+            CurrentPlayerNameBox.TextAlign = HorizontalAlignment.Center;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(CurrentPlayerNameBox);
+            Controls.Add(SignButton);
+            Controls.Add(LogButton);
+            Controls.Add(PasswordTextBox);
+            Controls.Add(LoginTextBox);
+            Controls.Add(SignUpButton);
+            Controls.Add(LogInButton);
+            Controls.Add(LogOutButton);
             Controls.Add(GameModeText);
             Controls.Add(GameModeComboBox);
             Controls.Add(BotLevelsText);
@@ -128,5 +222,13 @@
         private TextBox BotLevelsText;
         private TextBox GameModeText;
         private ComboBox GameModeComboBox;
+        private Button LogOutButton;
+        private Button LogInButton;
+        private Button SignUpButton;
+        private TextBox LoginTextBox;
+        private TextBox PasswordTextBox;
+        private Button LogButton;
+        private Button SignButton;
+        private TextBox CurrentPlayerNameBox;
     }
 }

@@ -19,14 +19,12 @@ public class Game
 {
     Random rand = new Random();
 
+
     SaveLoad saveLoad = new SaveLoad();
 
     Rounds rounds = new Rounds();
 
     private string playerName;
-
-    private int maxRoundsAmount = 3;
-    private int currentRound = 0;
 
     public GameState state { get; private set; }
     public GameMode gameMode { get; private set; }
@@ -42,8 +40,7 @@ public class Game
     private int ownScore = 0;
     private int enemyScore = 0;
 
-    private int ownWonRoundsAmount = 0;
-    private int enemyWonRoundsAmount = 0;
+    private int lastRoundWhenScoreWasChanged = 0;
 
     private bool ownFieldWasChanged = false;
     private bool enemyFieldWasChanged = false;
@@ -60,9 +57,41 @@ public class Game
 
         rounds.StartRounds();
     }
+    public void GameLoop()
+    {
+
+        while(isPlaying)
+        {
+            if(gameMode == GameMode.PvP)
+                server_client.ReadMessage();
+            switch (state)
+            {
+                case GameState.YourTurn:
+                    YouTurn();
+                    break;
+                case GameState.EnemyTurn:
+                    EnemyTurn();
+                    break;
+            }
+            TryUpdateFields();
+        }
+        rounds.TryStartNextRound();
+    }
+    public void Stop(Winner winner)
+    {
+
+        SetWinner(winner);
+        Thread.Sleep(10000);
+        if(gameMode == GameMode.PvP)
+        {
+            server_client.OnRead -= CheckMessageFromAnotherPlayer;
+            server_client.Stop();
+        }
+    }
+
     private void SetLoadedData()
     {
-        string[] data = saveLoad.Load().ToArray();
+        string[] data = saveLoad.Load();
         playerName = data[0];
         switch(data[1])
         {
@@ -82,7 +111,6 @@ public class Game
     {
         ownScore = 0;
         enemyScore = 0;
-        currentRound++;
 
         Thread.Sleep(3000);
 
@@ -107,41 +135,6 @@ public class Game
         isPlaying = true;
         GameLoop();
     }
-    public void GameLoop()
-    {
-
-        while(isPlaying)
-        {
-            if(gameMode == GameMode.PvP)
-                server_client.ReadMessage();
-            switch (state)
-            {
-                case GameState.YourTurn:
-
-                        YouTurn(); 
-                        break;
-                case GameState.EnemyTurn:
-
-                        EnemyTurn();
-                        break;
-            }
-            TryUpdateFields();
-            CheckScore();
-        }
-        rounds.TryStartNextRound();
-    }
-    public void Stop()
-    {
-
-        SetWinner();
-        Thread.Sleep(10000);
-        if(gameMode == GameMode.PvP)
-        {
-            server_client.OnRead -= CheckMessageFromAnotherPlayer;
-            server_client.Stop();
-        }
-    }
-
     private void SetActions()
     {
         rounds.OnEndMatch += Stop;
@@ -164,8 +157,8 @@ public class Game
 
     public void YouTurn()
     {
-        int x = 0;
-        int y = 0;
+        int x = -1;
+        int y = -1;
         if (gameMode != GameMode.AIvAI)
             (x, y) = EnterCoords();
         else
@@ -175,13 +168,19 @@ public class Game
         {
             server_client.SendMessage($"HitInOwnField:{x},{y}");
         }
+
         if (gameMode == GameMode.AIvAI)
             Thread.Sleep(400);
+
+        if (x == -1 || y == -1)
+            return;
+
         if (CoordsProcessing(enemyField, x, y) && gameMode != GameMode.PvP)
         {
             ownScore++;
         }
-        state = GameState.EnemyTurn;
+        CheckScore();
+            state = GameState.EnemyTurn;
     }
     public void EnemyTurn()
     {
@@ -194,6 +193,7 @@ public class Game
             {
                 enemyScore++;
             }
+            CheckScore();
             state = GameState.YourTurn;
         }
 
@@ -300,6 +300,8 @@ public class Game
     }
     public void CheckMessageFromAnotherPlayer(string message)
     {
+        if(!isPlaying) 
+            return;
         string[] splited = message.Split(":");
         string[] allInfo = splited[1].Split(",");
 
@@ -323,7 +325,6 @@ public class Game
                 }
                 break;
         }
-        CheckScore();
     }
 
     private void OnHitInYourField(int x, int y)
@@ -331,6 +332,7 @@ public class Game
         CoordsProcessing(ownField, x, y);
         if (ownField.GetCellType(x, y) == CellType.ShotedInShip)
             enemyScore++;
+        CheckScore();
         server_client.SendMessage($"HitInEnemyField:{x},{y},{ownField.GetCellType(x, y)}");
         ownFieldWasChanged = true;
         state = GameState.YourTurn;
@@ -343,22 +345,25 @@ public class Game
         }
         else if (cellType == CellType.ShotedInShip.ToString())
         {
-
             enemyField.SetCellType(CellType.ShotedInShip, x, y);
             ownScore++;
+
         }
+        CheckScore();
         enemyFieldWasChanged = true;
     }
 
     private void CheckScore()
     {
-        if (ownScore >= maxShipsAmount)
+        if (ownScore >= maxShipsAmount && rounds.currentRound != lastRoundWhenScoreWasChanged)
         {
-            ownWonRoundsAmount++;
+            lastRoundWhenScoreWasChanged = rounds.currentRound;
+            rounds.ownWonRoundsAmount++;
             isPlaying = false;
-        }else if (enemyScore >= maxShipsAmount)
+        }else if (enemyScore >= maxShipsAmount && rounds.currentRound != lastRoundWhenScoreWasChanged)
         {
-            enemyWonRoundsAmount++;
+            lastRoundWhenScoreWasChanged = rounds.currentRound;
+            rounds.enemyWonRoundsAmount++;
             isPlaying = false;
         }
     }
@@ -370,19 +375,19 @@ public class Game
         state = GameState.UpdatingField;
         Console.SetCursorPosition(0, 0);
         Console.Clear();
-        Console.Write($"Round: {currentRound};  Own score: {ownWonRoundsAmount}; Enemy score: {enemyWonRoundsAmount}");
+        Console.Write($"Round: {rounds.currentRound};  Own score: {rounds.ownWonRoundsAmount}; Enemy score: {rounds.enemyWonRoundsAmount}");
 
         ownField.cells.UpdateFieldOnScreen(FieldType.Own, gameMode);
         enemyField.cells.UpdateFieldOnScreen(FieldType.Enemy, gameMode);
         state = lastState;
     }
 
-    private void SetWinner()
-    {
+    private void SetWinner(Winner winner)
+    {   
         Console.SetCursorPosition(0, 0);
         Console.Clear();
-        Console.WriteLine(ownScore >= maxShipsAmount ? SetColor(0,255,0) : SetColor(255,0,0));
-        Console.WriteLine(ownScore >= maxShipsAmount ? "You WIN!!!" : "You Lose!!!");
+        Console.WriteLine(winner == Winner.You ? SetColor(0,255,0) : SetColor(255,0,0));
+        Console.WriteLine(winner == Winner.You ? "You WIN!!!" : "You Lose!!!");
         isPlaying = false;
     }
     private string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";
