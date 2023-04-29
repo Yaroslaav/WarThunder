@@ -112,6 +112,14 @@ namespace GameForms
                 return;
             }
 
+            if(foundProfile == currentProfile)
+            {
+                MessageBox.Show("You are already in this account");
+                LoginTextBox.Text = string.Empty;
+                PasswordTextBox.Text = string.Empty;
+                return;
+            }
+
             currentProfile = foundProfile;
             CurrentPlayerNameBox.Text = currentProfile.Login;
 
