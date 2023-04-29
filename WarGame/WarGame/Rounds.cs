@@ -17,7 +17,10 @@ public class Rounds
     public Action<Winner> OnEndMatch;
 
 
-    public void StartRounds() => TryStartNextRound();
+    public void StartRounds()
+    {
+        TryStartNextRound();
+    }
 
     public void TryStartNextRound()
     {

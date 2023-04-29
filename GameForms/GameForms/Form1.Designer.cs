@@ -41,7 +41,7 @@
             PasswordTextBox = new TextBox();
             LogButton = new Button();
             SignButton = new Button();
-            CurrentPlayerNameBox = new TextBox();
+            ProfileButton = new Button();
             SuspendLayout();
             // 
             // button1
@@ -179,22 +179,22 @@
             SignButton.UseVisualStyleBackColor = true;
             SignButton.Click += SignButton_Click;
             // 
-            // CurrentPlayerNameBox
+            // ProfileButton
             // 
-            CurrentPlayerNameBox.Enabled = false;
-            CurrentPlayerNameBox.Location = new Point(360, 12);
-            CurrentPlayerNameBox.Name = "CurrentPlayerNameBox";
-            CurrentPlayerNameBox.Size = new Size(161, 23);
-            CurrentPlayerNameBox.TabIndex = 13;
-            CurrentPlayerNameBox.Text = "Guest";
-            CurrentPlayerNameBox.TextAlign = HorizontalAlignment.Center;
+            ProfileButton.Location = new Point(207, 11);
+            ProfileButton.Name = "ProfileButton";
+            ProfileButton.Size = new Size(147, 23);
+            ProfileButton.TabIndex = 14;
+            ProfileButton.Text = "Guest";
+            ProfileButton.UseVisualStyleBackColor = true;
+            ProfileButton.Click += ProfileButton_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(CurrentPlayerNameBox);
+            Controls.Add(ProfileButton);
             Controls.Add(SignButton);
             Controls.Add(LogButton);
             Controls.Add(PasswordTextBox);
@@ -229,6 +229,6 @@
         private TextBox PasswordTextBox;
         private Button LogButton;
         private Button SignButton;
-        private TextBox CurrentPlayerNameBox;
+        private Button ProfileButton;
     }
 }

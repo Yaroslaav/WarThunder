@@ -19,6 +19,7 @@ public class Game
 {
     Random rand = new Random();
 
+    Profiles profiles;
 
     SaveLoad saveLoad = new SaveLoad();
 
@@ -30,7 +31,7 @@ public class Game
     public GameMode gameMode { get; private set; }
 
     private bool isPlaying;
-    private int maxShipsAmount = 10;
+    private int maxShipsAmount = 1;
 
     private Field ownField;
     private Field enemyField;
@@ -48,6 +49,9 @@ public class Game
     public void Start()
     {
         SetupDLL();
+
+        profiles = saveLoad.LoadAllProfiles();
+
         SetLoadedData();
 
         SetActions();
@@ -79,7 +83,7 @@ public class Game
     }
     public void Stop(Winner winner)
     {
-
+        profiles.currentProfile.GamesAmount++;
         SetWinner(winner);
         Thread.Sleep(10000);
         if(gameMode == GameMode.PvP)
@@ -180,7 +184,7 @@ public class Game
             ownScore++;
         }
         CheckScore();
-            state = GameState.EnemyTurn;
+        state = GameState.EnemyTurn;
     }
     public void EnemyTurn()
     {
@@ -359,13 +363,18 @@ public class Game
         {
             lastRoundWhenScoreWasChanged = rounds.currentRound;
             rounds.ownWonRoundsAmount++;
+            profiles.currentProfile.WinsRoundsAmount++;
+
             isPlaying = false;
         }else if (enemyScore >= maxShipsAmount && rounds.currentRound != lastRoundWhenScoreWasChanged)
         {
             lastRoundWhenScoreWasChanged = rounds.currentRound;
             rounds.enemyWonRoundsAmount++;
+            profiles.currentProfile.LosesRoundsAmount++;
+
             isPlaying = false;
         }
+        saveLoad.SaveProfiles(profiles);
     }
 
     public void UpdateAllScreen()
@@ -388,6 +397,17 @@ public class Game
         Console.Clear();
         Console.WriteLine(winner == Winner.You ? SetColor(0,255,0) : SetColor(255,0,0));
         Console.WriteLine(winner == Winner.You ? "You WIN!!!" : "You Lose!!!");
+
+        if(winner == Winner.You)
+        {
+            profiles.currentProfile.WinsAmount++;
+        }
+        else
+        {
+            profiles.currentProfile.LosesAmount--;
+        }
+        saveLoad.SaveProfiles(profiles);
+
         isPlaying = false;
     }
     private string SetColor(byte r, byte g, byte b) => $"\x1b[38;2;{r};{g};{b}m";

@@ -5,7 +5,7 @@
     public int WinsAmount { get; set; } = 0;
     public int LosesAmount { get; set; } = 0;
     public int GamesAmount { get; set; } = 0;
-    public int WinRoundsAmount { get; set; } = 0;
+    public int WinsRoundsAmount { get; set; } = 0;
     public int LosesRoundsAmount { get; set; } = 0;
 
     public Profile() { }
@@ -14,5 +14,6 @@
         Login = login;
         Password = password;
     }
+
 
 }

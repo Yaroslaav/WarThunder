@@ -7,8 +7,6 @@ namespace GameForms
         public SaveLoad saveLoad = new SaveLoad();
         public string pathToSavedFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
         public Profiles profiles;
-
-        public Profile currentProfile;
         public Form1()
         {
             InitializeComponent();
@@ -112,7 +110,7 @@ namespace GameForms
                 return;
             }
 
-            if(foundProfile == currentProfile)
+            if (foundProfile == profiles.currentProfile)
             {
                 MessageBox.Show("You are already in this account");
                 LoginTextBox.Text = string.Empty;
@@ -120,8 +118,10 @@ namespace GameForms
                 return;
             }
 
-            currentProfile = foundProfile;
-            CurrentPlayerNameBox.Text = currentProfile.Login;
+            profiles.currentProfile = foundProfile;
+            ProfileButton.Text = profiles.currentProfile.Login;
+
+            saveLoad.SaveProfiles(profiles);
 
             LoginTextBox.Text = string.Empty;
             PasswordTextBox.Text = string.Empty;
@@ -157,8 +157,22 @@ namespace GameForms
 
             profiles.profiles.Add(new Profile(LoginTextBox.Text, PasswordTextBox.Text));
             saveLoad.SaveProfiles(profiles);
+
             LoginTextBox.Text = string.Empty;
             PasswordTextBox.Text = string.Empty;
+        }
+
+        private void ProfileButton_Click(object sender, EventArgs e)
+        {
+            if(profiles.currentProfile != null)
+            {
+                MessageBox.Show($"{profiles.currentProfile.Login}\n" +
+                    $"Total games: {profiles.currentProfile.GamesAmount}\n" +
+                    $"Total wins: {profiles.currentProfile.WinsAmount}\n" +
+                    $"Total loses: {profiles.currentProfile.LosesAmount}\n" +
+                    $"Total win rounds: {profiles.currentProfile.WinRoundsAmount}\n" +
+                    $"Total lose rounds: {profiles.currentProfile.LosesRoundsAmount}\n");
+            }
         }
     }
 }
