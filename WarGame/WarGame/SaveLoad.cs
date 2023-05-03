@@ -2,34 +2,26 @@
 public class SaveLoad
 {
     string pathToGameFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents") + "/WarThunder";
-    public string[] Load()
+    public GameSettings Load()
     {
-        string[] loadedData = new string[3];
         try
         {
-            StreamReader fileR = new StreamReader($"{pathToGameFiles}/Saves/savegame.txt");
-
-            loadedData[0] = fileR.ReadLine();
-            loadedData[1] = fileR.ReadLine();
-            loadedData[2] = fileR.ReadLine();
-            fileR.Close();
+            return JsonConvert.DeserializeObject<GameSettings>(File.ReadAllText($"{pathToGameFiles}/Saves/GameSettings.json"));
         }
         catch 
         {
             SaveDefaultValues();
+            return JsonConvert.DeserializeObject<GameSettings>(File.ReadAllText($"{pathToGameFiles}/Saves/GameSettings.json"));
         }
-
-        return loadedData;
-
     }
     public void SaveDefaultValues()
     {
-        StreamWriter fileW = new StreamWriter($"{pathToGameFiles}/Saves/savegame.txt");
-        fileW.WriteLine("Player");
-        fileW.WriteLine("PvP");
-        fileW.WriteLine("0");
+        StreamWriter SW = new StreamWriter($"{pathToGameFiles}/Saves/GameSettings.json");
 
-        fileW.Close();
+        string serializedData = JsonConvert.SerializeObject(new GameSettings("Player", "PvAI", "0"), Formatting.Indented);
+        SW.WriteLine(serializedData);
+
+        SW.Close();
     }
 
     public void SaveProfiles(Profiles profiles)

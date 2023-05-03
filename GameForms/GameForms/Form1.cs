@@ -12,8 +12,13 @@ namespace GameForms
         {
             CreateDirectory();
             profiles = saveLoad.LoadAllProfiles();
+
             InitializeComponent();
             
+            if(profiles.currentProfile != null)
+            {
+                ProfileButton.Text = profiles.currentProfile.Login;
+            }
         }
 
         private void CreateDirectory()
@@ -22,15 +27,13 @@ namespace GameForms
             Directory.CreateDirectory($"{pathToGameFiles}/Saves");
         }
 
-        private string[] GetAllData()
+        private GameSettings GetAllData()
         {
-            string[] data = new string[3];
-            data[0] = NicknameField.Text == "" ? "Player" : NicknameField.Text;
+            string name = NicknameField.Text == "" ? "Player" : NicknameField.Text;
+            string gameMode = GameModeComboBox.Items[GameModeComboBox.SelectedIndex].ToString() == "" ? "PvAI" : GameModeComboBox.Items[GameModeComboBox.SelectedIndex].ToString();
+            string botLevel = BotLevelsComboBox.Items[BotLevelsComboBox.SelectedIndex].ToString() == "" ? "0" : BotLevelsComboBox.Items[BotLevelsComboBox.SelectedIndex].ToString();
 
-            data[1] = GameModeComboBox.Items[GameModeComboBox.SelectedIndex].ToString();
-            data[2] = BotLevelsComboBox.Items[BotLevelsComboBox.SelectedIndex].ToString();
-
-            return data;
+            return new GameSettings(name, gameMode, botLevel);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -44,9 +47,9 @@ namespace GameForms
             //saveLoad.SaveProfiles(profiles);
                         
 
-            profiles.currentProfile = null;
+            //profiles.currentProfile = null;
 
-            saveLoad.SaveProfiles(profiles);
+            //saveLoad.SaveProfiles(profiles);
             base.OnClosing(e);
         }
 
@@ -186,6 +189,7 @@ namespace GameForms
 
         private void ProfileButton_Click(object sender, EventArgs e)
         {
+            profiles = saveLoad.LoadAllProfiles();
             if(profiles.currentProfile != null)
             {
                 MessageBox.Show($"{profiles.currentProfile.Login}\n" +

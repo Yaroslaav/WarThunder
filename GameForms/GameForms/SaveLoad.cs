@@ -2,15 +2,15 @@
 public class SaveLoad
 {
     string pathToGameFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents") + "/WarThunder";
-    public void SaveGame(string[] data)
+    public void SaveGame(GameSettings gameSettings)
     {
-        StreamWriter fileW = new StreamWriter($"{pathToGameFiles}/Saves/savegame.txt");
-        for (int i = 0; i < data.Length; i++)
-        {
-            fileW.WriteLine(data[i]);
-        }
+        StreamWriter SW = new StreamWriter($"{pathToGameFiles}/Saves/GameSettings.json");
 
-        fileW.Close();
+        string serializedData = JsonConvert.SerializeObject(gameSettings, Formatting.Indented);
+        SW.WriteLine(serializedData);
+
+        SW.Close();
+
     }
     public void SaveProfiles(Profiles profiles)
     {

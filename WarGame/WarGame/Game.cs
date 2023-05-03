@@ -20,6 +20,7 @@ public class Game
     Random rand = new Random();
 
     Profiles profiles;
+    GameSettings settings;
 
     SaveLoad saveLoad = new SaveLoad();
 
@@ -95,9 +96,8 @@ public class Game
 
     private void SetLoadedData()
     {
-        string[] data = saveLoad.Load();
-        playerName = data[0];
-        switch(data[1])
+        settings = saveLoad.Load();
+        switch (settings.GameMode)
         {
             case "PvP":
                 gameMode = GameMode.PvP;
@@ -108,9 +108,12 @@ public class Game
             case "AIvAI":
                 gameMode = GameMode.AIvAI;
                 break;
+            default: 
+                gameMode = GameMode.PvAI;
+                break;
         }
-
     }
+    
     public void StartNextRound()
     {
         ownScore = 0;
