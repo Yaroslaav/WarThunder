@@ -137,7 +137,7 @@ namespace GameForms
                     PasswordTextBox.Text = string.Empty;
                     return;
                 }
-
+            profiles.currentProfile = new Profile();
             profiles.currentProfile.SetValuesFromAnotherProfile(foundProfile);
 
             saveLoad.SaveProfiles(profiles);

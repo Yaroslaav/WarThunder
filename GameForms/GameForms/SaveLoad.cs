@@ -43,7 +43,7 @@ public class SaveLoad
         {
             if (!File.Exists($"{pathToGameFiles}/Saves/Profiles.json"))
             {
-                SaveProfiles(new Profiles());
+                SaveProfiles(new Profiles(new Profile[0]));
             }
             if(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json").Length == 0)
             {
