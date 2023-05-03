@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
 public class SaveLoad
 {
-    string documentsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
+    string pathToGameFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents") + "/WarThunder";
     public void SaveGame(string[] data)
     {
-        StreamWriter fileW = new StreamWriter($"{documentsPath}/savegame.txt");
+        StreamWriter fileW = new StreamWriter($"{pathToGameFiles}/Saves/savegame.txt");
         for (int i = 0; i < data.Length; i++)
         {
             fileW.WriteLine(data[i]);
@@ -26,7 +26,7 @@ public class SaveLoad
         }
 
 
-        StreamWriter SW = new StreamWriter($"{documentsPath}/Profiles.json");
+        StreamWriter SW = new StreamWriter($"{pathToGameFiles}/Saves/Profiles.json");
 
         string serializedData = JsonConvert.SerializeObject(profiles, Formatting.Indented);
         SW.WriteLine(serializedData);
@@ -37,21 +37,25 @@ public class SaveLoad
     {
         try
         {
-            return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
+            return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json"));
         }
         catch
         {
-            if(File.ReadAllText($"{documentsPath}/Profiles.json").Length == 0)
+            if (!File.Exists($"{pathToGameFiles}/Saves/Profiles.json"))
+            {
+                SaveProfiles(new Profiles());
+            }
+            if(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json").Length == 0)
             {
                 SaveProfiles(new Profiles(new Profile[0]));
 
             }
             else
             {
-                throw new Exception("Saved file is incorect");
+                return new Profiles(new Profile[0]);
             }
         }
-        return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
+        return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json"));
     }
 
 

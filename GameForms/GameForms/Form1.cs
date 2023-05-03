@@ -6,13 +6,20 @@ namespace GameForms
     public partial class Form1 : Form
     {
         public SaveLoad saveLoad = new SaveLoad();
-        public string pathToSavedFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
+        public string pathToGameFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents") + "/WarThunder";
         public Profiles profiles;
         public Form1()
         {
+            CreateDirectory();
             profiles = saveLoad.LoadAllProfiles();
             InitializeComponent();
             
+        }
+
+        private void CreateDirectory()
+        {
+            Directory.CreateDirectory(pathToGameFiles);
+            Directory.CreateDirectory($"{pathToGameFiles}/Saves");
         }
 
         private string[] GetAllData()
@@ -29,7 +36,7 @@ namespace GameForms
         private void button1_Click(object sender, EventArgs e)
         {
             saveLoad.SaveGame(GetAllData());
-            Process.Start("WarGame.exe");
+            Process.Start($"{pathToGameFiles}/WarGame.exe");
             
         }
         protected override void OnClosing(CancelEventArgs e)

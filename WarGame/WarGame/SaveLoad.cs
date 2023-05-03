@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json;
 public class SaveLoad
 {
-    string documentsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
+    string pathToGameFiles = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents") + "/WarThunder";
     public string[] Load()
     {
         string[] loadedData = new string[3];
         try
         {
-            StreamReader fileR = new StreamReader($"{documentsPath}/savegame.txt");
+            StreamReader fileR = new StreamReader($"{pathToGameFiles}/Saves/savegame.txt");
 
             loadedData[0] = fileR.ReadLine();
             loadedData[1] = fileR.ReadLine();
@@ -24,7 +24,7 @@ public class SaveLoad
     }
     public void SaveDefaultValues()
     {
-        StreamWriter fileW = new StreamWriter($"{documentsPath}/savegame.txt");
+        StreamWriter fileW = new StreamWriter($"{pathToGameFiles}/Saves/savegame.txt");
         fileW.WriteLine("Player");
         fileW.WriteLine("PvP");
         fileW.WriteLine("0");
@@ -43,7 +43,7 @@ public class SaveLoad
 
         profiles.profiles[profileIndex].SetValuesFromAnotherProfile(profiles.currentProfile);
 
-        StreamWriter SW = new StreamWriter($"{documentsPath}/Profiles.json");
+        StreamWriter SW = new StreamWriter($"{pathToGameFiles}/Saves/Profiles.json");
 
         string serializedData = JsonConvert.SerializeObject(profiles, Formatting.Indented);
         SW.WriteLine(serializedData);
@@ -54,21 +54,20 @@ public class SaveLoad
     {
         try
         {
-            return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
+            return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json"));
         }
         catch
         {
-            if (File.ReadAllText($"{documentsPath}/Profiles.json").Length == 0)
+            if (File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json").Length == 0)
             {
                 SaveProfiles(new Profiles(new Profile[0]));
-
             }
             else
             {
-                throw new Exception("Saved file is incorect");
+                return new Profiles(new Profile[0]);
             }
         }
-        return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
+        return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{pathToGameFiles}/Saves/Profiles.json"));
     }
     public int FindProfileIndex(Profiles profiles, Profile profile)
     {
