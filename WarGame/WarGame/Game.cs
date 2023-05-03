@@ -363,7 +363,7 @@ public class Game
         {
             lastRoundWhenScoreWasChanged = rounds.currentRound;
             rounds.ownWonRoundsAmount++;
-            profiles.currentProfile.WinsRoundsAmount++;
+            profiles.currentProfile.WinRoundsAmount++;
 
             isPlaying = false;
         }else if (enemyScore >= maxShipsAmount && rounds.currentRound != lastRoundWhenScoreWasChanged)

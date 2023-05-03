@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace GameForms
@@ -9,8 +10,9 @@ namespace GameForms
         public Profiles profiles;
         public Form1()
         {
-            InitializeComponent();
             profiles = saveLoad.LoadAllProfiles();
+            InitializeComponent();
+            
         }
 
         private string[] GetAllData()
@@ -28,6 +30,17 @@ namespace GameForms
         {
             saveLoad.SaveGame(GetAllData());
             Process.Start("WarGame.exe");
+            
+        }
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            //saveLoad.SaveProfiles(profiles);
+                        
+
+            profiles.currentProfile = null;
+
+            saveLoad.SaveProfiles(profiles);
+            base.OnClosing(e);
         }
 
 
@@ -109,19 +122,21 @@ namespace GameForms
                 PasswordTextBox.Text = string.Empty;
                 return;
             }
+            if(profiles.currentProfile != null)
+                if (foundProfile.Login == profiles.currentProfile.Login && foundProfile.Password == profiles.currentProfile.Password)
+                {
+                    MessageBox.Show("You are already in this account");
+                    LoginTextBox.Text = string.Empty;
+                    PasswordTextBox.Text = string.Empty;
+                    return;
+                }
 
-            if (foundProfile == profiles.currentProfile)
-            {
-                MessageBox.Show("You are already in this account");
-                LoginTextBox.Text = string.Empty;
-                PasswordTextBox.Text = string.Empty;
-                return;
-            }
-
-            profiles.currentProfile = foundProfile;
-            ProfileButton.Text = profiles.currentProfile.Login;
+            profiles.currentProfile.SetValuesFromAnotherProfile(foundProfile);
 
             saveLoad.SaveProfiles(profiles);
+
+            ProfileButton.Text = profiles.currentProfile.Login;
+
 
             LoginTextBox.Text = string.Empty;
             PasswordTextBox.Text = string.Empty;

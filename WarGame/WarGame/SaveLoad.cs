@@ -1,17 +1,10 @@
-﻿
-using System.Drawing;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml;
-using System.Xml.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
+﻿using Newtonsoft.Json;
 public class SaveLoad
 {
     string documentsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
     public string[] Load()
     {
         string[] loadedData = new string[3];
-        //FileStream fileStream = new FileStream($"{documentsPath}/savegame.xml");
         try
         {
             StreamReader fileR = new StreamReader($"{documentsPath}/savegame.txt");
@@ -41,31 +34,54 @@ public class SaveLoad
 
     public void SaveProfiles(Profiles profiles)
     {
-        XmlSerializer xmlSerializer = new XmlSerializer(typeof(Profiles));
-
-        using (FileStream fs = new FileStream($"{documentsPath}/Profiles.xml", FileMode.OpenOrCreate))
+        if (profiles.currentProfile != null)
         {
-            xmlSerializer.Serialize(fs, profiles);
-
+            //profiles.profiles[FindProfileIndex(profiles)] = profiles.currentProfile;
         }
+
+        int profileIndex = FindProfileIndex(profiles, profiles.currentProfile);
+
+        profiles.profiles[profileIndex].SetValuesFromAnotherProfile(profiles.currentProfile);
+
+        StreamWriter SW = new StreamWriter($"{documentsPath}/Profiles.json");
+
+        string serializedData = JsonConvert.SerializeObject(profiles, Formatting.Indented);
+        SW.WriteLine(serializedData);
+
+        SW.Close();
     }
     public Profiles LoadAllProfiles()
     {
-        XmlSerializer xmlSerializer = new XmlSerializer(typeof(Profiles));
-
-        using (FileStream fs = new FileStream($"{documentsPath}/Profiles.xml", FileMode.OpenOrCreate))
+        try
         {
-            try
+            return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
+        }
+        catch
+        {
+            if (File.ReadAllText($"{documentsPath}/Profiles.json").Length == 0)
             {
-                Profiles profiles = xmlSerializer.Deserialize(fs) as Profiles;
-                return profiles;
+                SaveProfiles(new Profiles(new Profile[0]));
+
             }
-            catch
+            else
             {
-                return new Profiles(new Profile[0]);
+                throw new Exception("Saved file is incorect");
             }
         }
+        return JsonConvert.DeserializeObject<Profiles>(File.ReadAllText($"{documentsPath}/Profiles.json"));
     }
+    public int FindProfileIndex(Profiles profiles, Profile profile)
+    {
+        for (int i = 0; i < profiles.profiles.Count; i++)
+        {
+            if (profiles.profiles[i].Login == profile.Login && profiles.profiles[i].Password == profile.Password)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
 
 
 

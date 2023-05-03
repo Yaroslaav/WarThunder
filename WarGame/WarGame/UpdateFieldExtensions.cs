@@ -35,7 +35,7 @@ public static class UpdateFieldExtensions
                         if(ownField || gameMode == GameMode.AIvAI)
                             sb.Append($"{SetColor(150, 150, 150)} #");
                         else
-                            sb.Append($"{SetColor(0, 0, 255)} .");
+                            sb.Append($"{SetColor(0, 0, 255)} +");
                         break;
                     case CellType.Shoted:
                         sb.Append($"{SetColor(100,100,100)} X");
